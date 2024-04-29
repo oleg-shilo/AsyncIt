@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "SourceGenerator": {
+      "commandName": "Project",
+      "commandLineArgs": "dotnet build",
+      "workingDirectory": "D:\\dev\\learning\\DOTNET\\Source-Generators\\hello-world\\HelloWorld"
+    }
+  }
+}
