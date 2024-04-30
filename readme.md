@@ -5,4 +5,5 @@
 
 
 
-![image](https://github.com/oleg-shilo/AsyncIt/assets/16729806/9a5088cd-761c-4bdc-8a94-c8e32ade09bd)
+![image](https://github.com/oleg-shilo/AsyncIt/assets/16729806/3e544de8-51cf-4182-8c93-3c04add7c739)
+
