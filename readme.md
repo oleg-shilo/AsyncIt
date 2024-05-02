@@ -53,7 +53,7 @@ dotnet add package AsyncIt --version 1.0.0-pre
 
 That's it. Now you can mark any type you want to generate async/sync methods for, with the `[Async]` attribute (see the details below) and the new source code will be generated and included in the build. 
 
-You an always inspect the generated code in the Visual Studio solution explorer:   
+You can always inspect the generated code in the Visual Studio solution explorer:   
 
 ![image](https://github.com/oleg-shilo/AsyncIt/assets/16729806/fabed4b6-3eec-4421-a293-ed10fad4a950)
 
