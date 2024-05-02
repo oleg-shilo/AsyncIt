@@ -33,7 +33,7 @@
 
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
-    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <PackageReadmeFile></PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -70,13 +70,6 @@
 
   <ItemGroup>
     <Folder Include="tools\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\..\readme.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
   </ItemGroup>
 
 </Project>
