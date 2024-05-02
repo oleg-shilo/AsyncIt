@@ -10,9 +10,10 @@ This content is an extract of the project's main [Wiki page](https://github.com/
 
 ## Background
 
-AsyncIt is a source generator that is integrated into the .NET build process as a special tool type called "Analyzer". It is invoked by the compiler during the building the assembly and allow injection of of missing API end points based on the present API. Thus if the assembly being built has `GetStatus` but not `GetStatusAsync` then AsyncIt will generate the missing method with a straightforward implementation. Or it can generate the synchronous API if it is not present in the original codebase:
+AsyncIt is a source generator that is integrated into the .NET build process as a special tool type called "Analyzer". It is invoked by the compiler during the building of the assembly and allows the injection of missing API endpoints based on the present API. Thus if the assembly being built has `GetStatus` but not `GetStatusAsync` then AsyncIt will generate the missing method with a straightforward implementation. Or it can generate the synchronous API if it is not present in the original codebase:
 
-- Asynchronous API is not present.
+- The API defines synchronous methods only:
+
   _Original code_
 
   ```C#
@@ -22,7 +23,7 @@ AsyncIt is a source generator that is integrated into the .NET build process as 
   }
   ```
 
-  _Code to be compiled_
+  _Code that is fed to the C# compiler_
 
   ```C#
   public partial class DeviceLib
