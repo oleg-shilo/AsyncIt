@@ -301,7 +301,7 @@ A typical usage can be illustrated by the code below.
 _Async scenario:_
  
 ```C#
-[AsyncExternal(Name = "System.IO", Type="System.IO.Directory")];
+[AsyncExternal(Assembly = "System.IO", Type="System.IO.Directory")];
 ...
 async Task OnButtonClick(object sender, EventArgs args)
 {
@@ -314,7 +314,7 @@ async Task OnButtonClick(object sender, EventArgs args)
 _Sync scenario:_
 
 ```c#
-[AsyncExternal(Name = "System.Net", Type="System.Net.Http.HttpClient", Interface = Interface.Sync)];
+[AsyncExternal(Assembly = "System.Net", Type="System.Net.Http.HttpClient", Interface = Interface.Sync)];
 
 ...
 
