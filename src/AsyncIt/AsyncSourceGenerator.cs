@@ -17,8 +17,12 @@ using Microsoft.CodeAnalysis.Text;
 [assembly: InternalsVisibleTo("AsyncIt.Tests")]
 
 // Reading
-// One of the best about Async: https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview
-// Source IncrementalGenerator https://andrewlock.net/exploring-dotnet-6-part-9-source-generator-updates-incremental-generators/
+// One of the best about Async:
+//    https://devblogs.microsoft.com/dotnet/configureawait-faq/
+//   
+// Source IncrementalGenerator:
+//    https://andrewlock.net/exploring-dotnet-6-part-9-source-generator-updates-incremental-generators/
+//    https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview
 
 // TODO:
 // [x] Async.Local.PartialClass
