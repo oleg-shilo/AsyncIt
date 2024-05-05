@@ -10,9 +10,10 @@ This content is an extract of the project's main [Wiki page](https://github.com/
 
 ## Background
 
-AsyncIt is a source generator that is integrated into the .NET build process as a special tool type called "Analyzer". It is invoked by the compiler during the building the assembly and allow injection of of missing API end points based on the present API. Thus if the assembly being built has `GetStatus` but not `GetStatusAsync` then AsyncIt will generate the missing method with a straightforward implementation. Or it can generate the synchronous API if it is not present in the original codebase:
+AsyncIt is a source generator that is integrated into the .NET build process as a special tool type called "Analyzer". It is invoked by the compiler during the building of the assembly and allows the injection of missing API endpoints based on the present API. Thus if the assembly being built has `GetStatus` but not `GetStatusAsync` then AsyncIt will generate the missing method with a straightforward implementation. Or it can generate the synchronous API if it is not present in the original codebase:
 
-- Asynchronous API is not present.
+- The API defines synchronous methods only:
+
   _Original code_
 
   ```C#
@@ -22,7 +23,7 @@ AsyncIt is a source generator that is integrated into the .NET build process as 
   }
   ```
 
-  _Code to be compiled_
+  _Code that is fed to the C# compiler_
 
   ```C#
   public partial class DeviceLib
@@ -102,204 +103,6 @@ static void Main()
    File.WriteAllText($"account_{account.Id}.txt", account.Balance.ToString());
 }
 ```
-
-### "Partial Class"
-
-_Generating additional asynchronous methods for the given class:_
-
-<table style="width:100%">
-<tr><td> User Code</td> <td> Additional generated code </td></tr>
-<tr><td> 
-
-```C#
-[Async]
-public partial class BankService
-{
-    public partial class OrderService
-    {
-        public Order GetOrder(int id) 
-        {...}
-```
-
-</td>
-<td>
-
-```C#
-public partial class BankService
-{
-    public partial class OrderService
-    {
-        public Task<Order> GetOrderAsync(int id)
-            => Task.Run(() => GetOrder(id));
-```
-
-</td>
-</tr>
-</table>
-
-_Generating additional synchronous methods for the given class:_
-
-<table style="width:100%">
-<tr><td> User Code</td> <td> Additional generated code </td></tr>
-<tr><td> 
-
-```C#
-[Async(Interface = Interface.Sync)]
-partial class AccountService
-{
-    public async Task<Account> GetAccountAsync(int id)
-    {...}
-```
-
-</td>
-<td>
-
-```C#
-partial class AccountService
-{
-    public Account GetAccount(int id)
-        => GetAccountAsync(id).Result;
-```
-
-</td>
-</tr>
-</table>
-
-_Generating additional synchronous and asynchronous methods for the given class:_ 
-
-<table style="width:100%">
-<tr><td> User Code</td> <td> Additional generated code </td></tr>
-<tr><td> 
-
-```C#
-[Async(Interface = Interface.Full)]
-partial class BankService
-{
-    public async Task<Account> GetAccountAsync(int id)
-    {...}
-    public User GetUser(string name) 
-    {...}
-```
-
-</td>
-<td>
-
-```C#
-partial class BankService
-{
-    public Account GetAccount(int id)
-        => GetAccountAsync(id).Result;
-
-    public Task<User> GetUserAsync(string name)
-        => Task.Run(() => GetUser(name));
-```
-
-</td>
-</tr>
-</table>
-
-### "Extension Methods"
-
-_Generating additional asynchronous methods for the given class:_
-
-<table >
-<tr><td> User Code</td> <td> Additional generated code </td></tr>
-<tr><td> 
-
-```C#
-[Async(Algorithm = Algorithm.ExtensionMethods)]
-public partial class BankService
-{
-    public class OrderService
-    {
-        public Order GetOrder(int id) 
-        {...}
-```
-
-</td>
-<td>
-
-```C#
-public static class BankServiceExtensions
-{
-    public static class OrderService
-    {
-        public static Task<Order> 
-            GetOrderAsync(this OrderService service, int id)
-                => Task.Run(() => service.GetOrder(id));
-```
-
-</td>
-</tr>
-</table>
-
-_Generating additional synchronous methods for the given class:_ 
-
-<table >
-<tr><td> User Code</td> <td> Additional generated code </td></tr>
-<tr><td> 
-
-```C#
-[Async(
-    Algorithm = Algorithm.ExtensionMethods, 
-    Interface = Interface.Sync)]
-partial class AccountService
-{
-    public async Task<Account> GetAccountAsync(int id)
-    {...}
-```
-
-</td>
-<td>
-
-```C#
-public static class AccountServiceExtensions
-{
-    public static Account 
-        GetAccount(this AccountService service, int id)
-            => service.GetAccountAsync(id).Result;
-```
-
-</td>
-</tr>
-</table>
-
-_Generating additional synchronous and asynchronous methods for the given class:_
-
-<table style="width:100%">
-<tr><td> User Code</td> <td> Additional generated code </td></tr>
-<tr><td> 
-
-```C#
-[Async(
-    Algorithm = Algorithm.ExtensionMethods, 
-    Interface = Interface.Full)]
-partial class BankService
-{
-    public async Task<Account> GetAccountAsync(int id)
-    {...}
-    public User GetUser(string name) 
-    {...}
-```
-
-</td>
-<td>
-
-```C#
-public static class BankServiceExtensions
-{
-    public static Account 
-        GetAccount(this AccountService service, int id)
-            => service.GetAccountAsync(id).Result;
-
-    public Task<User> 
-        GetUserAsync(this AccountService service, string name)
-            => Task.Run(() => service.GetUser(name));
-```
-
-</td>
-</tr>
-</table>
 
 ###  Extending external types
 
