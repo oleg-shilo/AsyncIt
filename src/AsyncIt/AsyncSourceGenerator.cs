@@ -49,7 +49,7 @@ namespace AsyncIt
                 {
                     // Debug.Assert(false);
 
-                    (string typeName, string moduleName) = cntx.GetAsyncAssemblyInfo();
+                    (string typeName, string moduleName) = cntx.GetAsyncExternalInfo();
 
                     dynamic model = cntx.SemanticModel;
                     var refs = model.Compilation.References as IEnumerable<dynamic>;
@@ -87,11 +87,9 @@ namespace AsyncIt
                 {
                     // Debug.Assert(false);
 
-                    var attrArguments = cntx.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncAttribute)).NamedArguments;
-
                     var attr = new AsyncAttribute();
-                    attr.Algorithm = attrArguments.Arg(nameof(Algorithm)).EnumParse<Algorithm>();
-                    attr.Interface = attrArguments.Arg(nameof(Interface)).EnumParse<Interface>();
+
+                    (attr.Algorithm, attr.Interface) = cntx.GetAsyncInfo();
 
                     Log.WriteLine($"{attr.Algorithm}, {attr.Interface}");
                     try

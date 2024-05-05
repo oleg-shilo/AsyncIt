@@ -9,25 +9,30 @@ namespace AsyncIt
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class AsyncAttribute : Attribute
     {
-        // public AsyncAttribute()
-        // {
-        // }
+        public AsyncAttribute()
+        {
+        }
 
-        // public AsyncAttribute(Algorithm algorithm, Interface @interface)
-        // {
-        //     Algorithm = algorithm;
-        //     Interface = @interface;
-        // }
+        public AsyncAttribute(Algorithm algorithm, Interface @interface)
+        {
+            Algorithm = algorithm;
+            Interface = @interface;
+        }
+        public AsyncAttribute(Interface @interface, Algorithm algorithm)
+        {
+            Algorithm = algorithm;
+            Interface = @interface;
+        }
 
-        // public AsyncAttribute(Algorithm algorithm)
-        // {
-        //     Algorithm = algorithm;
-        // }
+        public AsyncAttribute(Algorithm algorithm)
+        {
+            Algorithm = algorithm;
+        }
 
-        // public AsyncAttribute(Interface @interface)
-        // {
-        //     Interface = @interface;
-        // }
+        public AsyncAttribute(Interface @interface)
+        {
+            Interface = @interface;
+        }
         public Algorithm Algorithm { get; set; }
         public Interface Interface { get; set; }
     }

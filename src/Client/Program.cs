@@ -43,7 +43,6 @@ partial class Program
     static partial void HelloFrom(string name);
 }
 
-// public class AsyncAttribute : Attribute { }
 
 public class Account
 {
@@ -51,7 +50,7 @@ public class Account
     public string? Name { get; set; }
 }
 
-[Async(Algorithm = Algorithm.ExtensionMethods)]
+[Async(Algorithm.ExtensionMethods)]
 partial class AccountService
 {
     public Account GetAccount(int id)
@@ -65,7 +64,7 @@ partial class AccountService
     }
 }
 
-[Async(Algorithm = Algorithm.ExtensionMethods, Interface = Interface.Sync)]
+[Async(Algorithm.ExtensionMethods, Interface.Sync)]
 partial class AccountService2
 {
     public async Task<Account> GetAccountAsync(int id)

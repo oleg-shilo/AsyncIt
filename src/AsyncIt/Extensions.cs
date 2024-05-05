@@ -83,10 +83,11 @@ static class Extensions
     internal static bool IsToken(this object element, SyntaxKind expectedKind)
         => ((SyntaxToken)element).IsKind(expectedKind);
 
-    internal static (string type, string assembly) GetAsyncAssemblyInfo(this GeneratorAttributeSyntaxContext context)
+    internal static (string type, string assembly) GetAsyncExternalInfo(this GeneratorAttributeSyntaxContext context)
     {
         var attrArguments = context.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncExternalAttribute)).NamedArguments;
         var constrArguments = context.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncExternalAttribute)).ConstructorArguments;
+
 
         if (constrArguments.Length == 0)
         {
@@ -101,6 +102,32 @@ static class Extensions
             var className = attrValue.ToString();
             var assemblyName = ((ISymbol)attrValue).ContainingModule.ToString();
             return (className, assemblyName);
+        }
+    }
+    internal static (Algorithm algorithm, Interface @interface) GetAsyncInfo(this GeneratorAttributeSyntaxContext context)
+    {
+        var attrArguments = context.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncAttribute)).NamedArguments;
+        var constrArguments = context.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncAttribute)).ConstructorArguments;
+
+        var attr = new AsyncAttribute();
+
+
+        if (constrArguments.Length == 0)
+        {
+            var algorithmValue = attrArguments
+                .FirstOrDefault(x => x.Key == nameof(AsyncAttribute.Algorithm)).Value.Value?.ToString().EnumParse<Algorithm>();
+            var interfaceValue = attrArguments
+                .FirstOrDefault(x => x.Key == nameof(AsyncAttribute.Interface)).Value.Value?.ToString().EnumParse<Interface>();
+
+            return (algorithmValue ?? default, interfaceValue ?? default);
+        }
+        else
+        {
+
+            var algorithm = attrArguments.Arg(nameof(Algorithm)).EnumParse<Algorithm>();
+            var @interface = attrArguments.Arg(nameof(Interface)).EnumParse<Interface>();
+
+            return (algorithm, @interface);
         }
     }
     internal static string AsyncToSyncReturnType(this string returnType)
