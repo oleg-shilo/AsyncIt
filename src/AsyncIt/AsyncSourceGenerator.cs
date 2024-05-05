@@ -1,6 +1,7 @@
 ﻿// Ignore Spelling: Metadata
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -9,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
+using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -26,9 +28,9 @@ using Microsoft.CodeAnalysis.Text;
 
 // TODO:
 // [x] Async.Local.PartialClass
-// [ ] Sync.Local.PartialClass
+// [x] Sync.Local.PartialClass
 // [x] Async.Local.ExtensionClass
-// [ ] Sync.Local.ExtensionClass
+// [x] Sync.Local.ExtensionClass
 // [ ] Async.External.ExtensionClass
 // [ ] Sync.External.ExtensionClass
 
@@ -39,24 +41,57 @@ namespace AsyncIt
     [Generator]
     public class AsyncExtensionsGenerator : IIncrementalGenerator
     {
-        public void Initialize(IncrementalGeneratorInitializationContext context)
+        public void InitializeAssemblyGenerator(IncrementalGeneratorInitializationContext context)
         {
-            // Add the marker attribute as we do not share this assembly for referencing
-            context.RegisterPostInitializationOutput(ctx =>
-                ctx.AddSource("AsyncAttribute.g.cs", Properties.Resources.Attributes));
+            var asmPipeline = context.SyntaxProvider.ForAttributeWithMetadataName(typeof(AsyncExternalAttribute).FullName,
+                predicate: (node, cancellation) => true,
+                transform: (cntx, cancellation) =>
+                {
+                    // Debug.Assert(false);
 
-            // prepare a filter and a transform delegate types that are marked with the `Async` attribute
-            var pipeline = context.SyntaxProvider.ForAttributeWithMetadataName("AsyncIt.AsyncAttribute",
+                    (string typeName, string moduleName) = cntx.GetAsyncAssemblyInfo();
+
+                    dynamic model = cntx.SemanticModel;
+                    var refs = model.Compilation.References as IEnumerable<dynamic>;
+                    var asmsFiles = refs.Select(x => x.FilePath).Cast<string>().ToList();
+
+                    var asmPath = asmsFiles.FirstOrDefault(x => x.EndsWith(moduleName));
+
+
+                    return new Model
+                    {
+                        // SyntaxNode = cntx.TargetNode as TypeDeclarationSyntax
+                    };
+                });
+
+            context.RegisterSourceOutput(asmPipeline, (cntx, model) =>
+            {
+                try
+                {
+                    // Debug.Assert(false);
+
+
+                }
+                catch (Exception ex)
+                {
+                    Log.WriteLine(ex.Message);
+                }
+            });
+        }
+        public void InitializeTypeGenerator(IncrementalGeneratorInitializationContext context)
+        {
+
+            var pipeline = context.SyntaxProvider.ForAttributeWithMetadataName(typeof(AsyncAttribute).FullName,
                 predicate: (node, cancellation) => node is TypeDeclarationSyntax,
                 transform: (cntx, cancellation) =>
                 {
                     // Debug.Assert(false);
 
-                    var attrArguments = cntx.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == "AsyncAttribute").NamedArguments;
+                    var attrArguments = cntx.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncAttribute)).NamedArguments;
 
                     var attr = new AsyncAttribute();
-                    attr.Algorithm = attrArguments.Arg("Algorithm").EnumParse<Algorithm>();
-                    attr.Interface = attrArguments.Arg("Interface").EnumParse<Interface>();
+                    attr.Algorithm = attrArguments.Arg(nameof(Algorithm)).EnumParse<Algorithm>();
+                    attr.Interface = attrArguments.Arg(nameof(Interface)).EnumParse<Interface>();
 
                     Log.WriteLine($"{attr.Algorithm}, {attr.Interface}");
                     try
@@ -93,6 +128,15 @@ namespace AsyncIt
                     Log.WriteLine(ex.Message);
                 }
             });
+        }
+        public void Initialize(IncrementalGeneratorInitializationContext context)
+        {
+            // Add the marker attribute as we do not share this assembly for referencing
+            context.RegisterPostInitializationOutput(ctx =>
+                ctx.AddSource("AsyncAttribute.g.cs", Properties.Resources.Attributes));
+
+            InitializeAssemblyGenerator(context);
+            InitializeTypeGenerator(context);
         }
     }
 }

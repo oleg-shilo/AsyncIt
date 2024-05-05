@@ -1,5 +1,10 @@
 ﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using AsyncIt;
+// 
+[assembly: AsyncExternal(typeof(HttpClient))]
+
+// [assembly: AsyncAsm(Class = typeof(HttpClient))]
 
 namespace ConsoleApp;
 
@@ -12,6 +17,7 @@ static class HttpClientExtensions
         => Task.Run(() => client.GetString(url));
 }
 
+// [AsyncAsm(Class = typeof(HttpClient))] 
 partial class Program
 {
     static async Task Main(string[] args)

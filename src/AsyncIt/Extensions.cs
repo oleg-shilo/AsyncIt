@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Xml.Linq;
+using AsyncIt;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -81,6 +82,27 @@ static class Extensions
 
     internal static bool IsToken(this object element, SyntaxKind expectedKind)
         => ((SyntaxToken)element).IsKind(expectedKind);
+
+    internal static (string type, string assembly) GetAsyncAssemblyInfo(this GeneratorAttributeSyntaxContext context)
+    {
+        var attrArguments = context.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncExternalAttribute)).NamedArguments;
+        var constrArguments = context.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncExternalAttribute)).ConstructorArguments;
+
+        if (constrArguments.Length == 0)
+        {
+            object attrValue = attrArguments.FirstOrDefault(x => x.Key == nameof(AsyncExternalAttribute.Type)).Value;
+            var className = ((TypedConstant)attrValue).Value.ToString();
+            var assemblyName = ((ISymbol)((TypedConstant)attrValue).Value).ContainingModule.ToString();
+            return (className, assemblyName);
+        }
+        else
+        {
+            object attrValue = constrArguments.FirstOrDefault().Value;
+            var className = attrValue.ToString();
+            var assemblyName = ((ISymbol)attrValue).ContainingModule.ToString();
+            return (className, assemblyName);
+        }
+    }
     internal static string AsyncToSyncReturnType(this string returnType)
         => returnType == "Task"
             ? "void"

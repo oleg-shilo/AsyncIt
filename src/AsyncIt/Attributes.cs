@@ -9,17 +9,46 @@ namespace AsyncIt
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class AsyncAttribute : Attribute
     {
+        // public AsyncAttribute()
+        // {
+        // }
+
+        // public AsyncAttribute(Algorithm algorithm, Interface @interface)
+        // {
+        //     Algorithm = algorithm;
+        //     Interface = @interface;
+        // }
+
+        // public AsyncAttribute(Algorithm algorithm)
+        // {
+        //     Algorithm = algorithm;
+        // }
+
+        // public AsyncAttribute(Interface @interface)
+        // {
+        //     Interface = @interface;
+        // }
         public Algorithm Algorithm { get; set; }
         public Interface Interface { get; set; }
     }
 
+
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
     public sealed class AsyncExternalAttribute : Attribute
     {
-        public string AssemblyName { get; set; }
-        public string AssemblyType { get; set; }
-        public Interface Interface { get; set; }
+        public AsyncExternalAttribute(Type type)
+        {
+            Type = type;
+        }
 
+        public AsyncExternalAttribute(Type type, Interface @interface)
+        {
+            Type = type;
+            Interface = @interface;
+        }
+
+        public Interface Interface { get; set; }
+        public Type Type { get; set; }
     }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
