@@ -15,6 +15,47 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+static class Runtime
+{
+    static Runtime()
+    {
+        NewLine = new StringBuilder().AppendLine().ToString();
+    }
+    public static string NewLine;
+}
+
+public static class ArrayExtensions
+{
+    /// <summary>
+    /// Converts an array to a tuple.
+    /// <para>Based on this beautiful solution: https://stackoverflow.com/questions/49190830/is-it-possible-for-string-split-to-return-tuple</para>
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="list">The list.</param>
+    /// <param name="first">The first.</param>
+    /// <param name="rest"></param>
+    public static void Deconstruct<T>(this IList<T> list, out T first, out IList<T> rest)
+    {
+        first = list.Count > 0 ? list[0] : default(T); // or throw
+        rest = list.Skip(1).ToList();
+    }
+
+    /// <summary>
+    /// Converts an array to a tuple.
+    /// <para>Based on this beautiful solution: https://stackoverflow.com/questions/49190830/is-it-possible-for-string-split-to-return-tuple</para>
+    /// </summary>
+    /// <param name="list">The list.</param>
+    /// <param name="first">The first.</param>
+    /// <param name="second">The second.</param>
+    /// <param name="rest">The rest.</param>
+    public static void Deconstruct<T>(this IList<T> list, out T first, out T second, out IList<T> rest)
+    {
+        first = list.Count > 0 ? list[0] : default(T); // or throw
+        second = list.Count > 1 ? list[1] : default(T); // or throw
+        rest = list.Skip(2).ToList();
+    }
+}
+
 static class Extensions
 {
     public static string Arg(this ImmutableArray<KeyValuePair<string, TypedConstant>> namedArguments, string name)
@@ -74,19 +115,15 @@ static class Extensions
 
     public static string JoinBy(this IEnumerable<string> arr, string separator) => string.Join(separator, arr);
 
-#pragma warning disable RS1035 // Do not use APIs banned for analyzers
-
-    public static StringBuilder InsertLine(this StringBuilder builder, int index, string value) => builder.Insert(index, value + Environment.NewLine);
-
-#pragma warning restore RS1035 // Do not use APIs banned for analyzers
+    public static StringBuilder InsertLine(this StringBuilder builder, int index, string value) => builder.Insert(index, value + Runtime.NewLine);
 
     internal static bool IsToken(this object element, SyntaxKind expectedKind)
         => ((SyntaxToken)element).IsKind(expectedKind);
 
-    internal static (string type, string assembly) GetAsyncExternalInfo(this GeneratorAttributeSyntaxContext context)
+    internal static (string type, string assembly, ISymbol symbol) GetAsyncExternalInfo(this ISymbol targetSymbol)
     {
-        var attrArguments = context.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncExternalAttribute)).NamedArguments;
-        var constrArguments = context.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncExternalAttribute)).ConstructorArguments;
+        var attrArguments = targetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncExternalAttribute)).NamedArguments;
+        var constrArguments = targetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncExternalAttribute)).ConstructorArguments;
 
 
         if (constrArguments.Length == 0)
@@ -94,20 +131,20 @@ static class Extensions
             object attrValue = attrArguments.FirstOrDefault(x => x.Key == nameof(AsyncExternalAttribute.Type)).Value;
             var className = ((TypedConstant)attrValue).Value.ToString();
             var assemblyName = ((ISymbol)((TypedConstant)attrValue).Value).ContainingModule.ToString();
-            return (className, assemblyName);
+            return (className, assemblyName, attrValue as ISymbol);
         }
         else
         {
             object attrValue = constrArguments.FirstOrDefault().Value;
             var className = attrValue.ToString();
             var assemblyName = ((ISymbol)attrValue).ContainingModule.ToString();
-            return (className, assemblyName);
+            return (className, assemblyName, attrValue as ISymbol);
         }
     }
-    internal static (Algorithm algorithm, Interface @interface) GetAsyncInfo(this GeneratorAttributeSyntaxContext context)
+    internal static (Algorithm algorithm, Interface @interface) GetAsyncInfo(this ISymbol targetSymbol)
     {
-        var attrArguments = context.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncAttribute)).NamedArguments;
-        var constrArguments = context.TargetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncAttribute)).ConstructorArguments;
+        var attrArguments = targetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncAttribute)).NamedArguments;
+        var constrArguments = targetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncAttribute)).ConstructorArguments;
 
         var attr = new AsyncAttribute();
 
@@ -142,4 +179,26 @@ static class Extensions
             ||
            ((info.ReturnType.StartsWith("Task<") || info.ReturnType.StartsWith("System.Task<"))
              && info.ReturnType.EndsWith(">"));
+
+    public static bool HasAny<T>(this IEnumerable<T> items)
+        => items != null && items.Any();
+    public static bool HasText(this string text)
+    {
+        return !string.IsNullOrEmpty(text);
+    }
+    public static T To<T>(this object obj)
+    {
+        return (T)obj;
+    }
+    public static bool OneOf(this string text, params string[] items)
+    {
+        return items.Any(x => x == text);
+    }
+    public static string IndentLinesBy(this string text, int indentLevel, string linePreffix = "")
+    {
+        return string.Join(Runtime.NewLine, text.Replace("\r", "")
+                                                    .Split('\n')
+                                                    .Select(x => x.IndentBy(indentLevel, linePreffix))
+                                                    .ToArray());
+    }
 }

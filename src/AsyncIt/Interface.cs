@@ -16,23 +16,23 @@ using AsyncIt;
 
 class Model
 {
-    public string Namespace;
+    public string Namespace = "";
     public AsyncAttribute Attribute;
-    public string TypeName;
-    public string FilePath;
+    public string TypeName = "";
+    public string FilePath = "";
     public TypeDeclarationSyntax SyntaxNode;
 }
 
 class TypeMetadata
 {
     // public string Namespace;
-    public string[] UsingNamespaces;
-
-    public string[] Attributes;
-    public string Modifiers;          // public, static, sealed etc
-    public string Name;
-    public string GenericParameters;  // method generic type params
-    public MethodMetadata[] Methods;
+    public string[] UsingNamespaces = new string[0];
+    public string[] Attributes = new string[0];
+    public string Modifiers = "";          // public, static, sealed etc
+    public string Namespace = "";
+    public string Name = "";
+    public string GenericParameters = "";  // method generic type params
+    public MethodMetadata[] Methods = new MethodMetadata[0];
 }
 
 class MethodMetadata

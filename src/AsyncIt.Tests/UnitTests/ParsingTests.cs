@@ -5,6 +5,8 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.FindSymbols;
+using Microsoft.CodeAnalysis.Text;
 
 namespace AsyncIt.Tests.UnitTests;
 
@@ -198,5 +200,35 @@ public class ParsingTest
         Assert.Equal("<T, T2>", metadata.GenericParameters);
         Assert.Equal("(Dictionary<string, Nullable<int>> id, string name)", metadata.Parameters);
         Assert.Equal("(id, name)", metadata.ParametersNames);
+    }
+
+    [Fact]
+    public void CanReconstructExternalType()
+    {
+        var code = """
+        using System;
+        using System.IO;
+        using System.Net;
+        using System.ComponentModel;
+        using System.Runtime.CompilerServices;
+        using AsyncIt;
+
+        [assembly: AsyncExternal(typeof(Directory), Interface.Sync)]
+        // [assembly: AsyncExternal(typeof(HttpClient))]
+        """;
+
+        var doc = code.ToCompiledDoc([
+                typeof(object).Assembly.Location,
+                typeof(AsyncExternalAttribute).Assembly.Location,
+                // typeof(HttpClient).Assembly.Location,
+                typeof(Directory).Assembly.Location]);
+
+
+        ISymbol symbol = doc.SymbolAt(code.IndexOf("Directory") + 3);
+        var directoryCode = symbol?.Reconstruct();
+
+        // symbol = doc.SymbolAt(code.IndexOf("HttpClient") + 3);
+        // var httpClientCode = symbol?.Reconstruct();
+
     }
 }

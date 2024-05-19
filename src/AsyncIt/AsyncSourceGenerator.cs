@@ -49,7 +49,17 @@ namespace AsyncIt
                 {
                     // Debug.Assert(false);
 
-                    (string typeName, string moduleName) = cntx.GetAsyncExternalInfo();
+                    (string typeName,
+                    string moduleName,
+                    ISymbol symbol) = cntx.TargetSymbol.GetAsyncExternalInfo();
+                    // var ttt = Reconstructions.GetSymbol(cntx.TargetNode, cntx.SemanticModel);
+
+                    var sw = Stopwatch.StartNew();
+                    var code = Syntaxer.Reconstruct(symbol);
+
+                    var time = sw.Elapsed.ToString();
+
+                    Log.WriteLine($"Reconstruction time: {time}");
 
                     dynamic model = cntx.SemanticModel;
                     var refs = model.Compilation.References as IEnumerable<dynamic>;
@@ -89,7 +99,7 @@ namespace AsyncIt
 
                     var attr = new AsyncAttribute();
 
-                    (attr.Algorithm, attr.Interface) = cntx.GetAsyncInfo();
+                    (attr.Algorithm, attr.Interface) = cntx.TargetSymbol.GetAsyncInfo();
 
                     Log.WriteLine($"{attr.Algorithm}, {attr.Interface}");
                     try
@@ -116,7 +126,7 @@ namespace AsyncIt
                 {
                     // Debug.Assert(false);
 
-                    var result = model.SyntaxNode.GenerateExtensionSource(model.Attribute);
+                    var result = model.SyntaxNode.GenerateExtraCodeForType(model.Attribute);
                     var file = $"{Path.GetFileNameWithoutExtension(model.FilePath)}.{model?.Namespace ?? "global"}.{model.TypeName}.g.cs";
 
                     cntx.AddSource(file, SourceText.From(result.code, Encoding.UTF8));

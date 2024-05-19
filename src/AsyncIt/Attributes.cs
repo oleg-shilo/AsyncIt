@@ -37,7 +37,6 @@ namespace AsyncIt
         public Interface Interface { get; set; }
     }
 
-
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
     public sealed class AsyncExternalAttribute : Attribute
     {
