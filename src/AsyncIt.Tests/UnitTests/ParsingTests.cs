@@ -36,7 +36,7 @@ public class ParsingTest
     public void CanParseTypeDeclaration()
     {
         var code = """
-            public partial struct OrderService
+            public partial struct OrderService : BaseClass
             {
                 static public Order GetOrder(int id) => null;
             }
@@ -49,6 +49,7 @@ public class ParsingTest
         Assert.Empty(metadata.Attributes);
         Assert.Equal("public partial struct", metadata.Modifiers);
         Assert.Equal("OrderService", metadata.Name);
+        Assert.Equal(": BaseClass", metadata.BaseList);
         Assert.Equal("", metadata.GenericParameters);
     }
 
@@ -69,7 +70,8 @@ public class ParsingTest
         Assert.Empty(metadata.Attributes);
         Assert.Equal("public partial class", metadata.Modifiers);
         Assert.Equal("OrderService", metadata.Name);
-        Assert.Equal("<T> where t: StringBuilder", metadata.GenericParameters);
+        Assert.Equal("<T>", metadata.GenericParameters);
+        Assert.Equal("where t: StringBuilder", metadata.GenericParametersConstraints);
     }
 
     [Fact]
@@ -120,7 +122,9 @@ public class ParsingTest
         Assert.Empty(metadata.Attributes);
         Assert.Equal("public partial class", metadata.Modifiers);
         Assert.Equal("OrderService", metadata.Name);
-        Assert.Equal("<T> where T : class", metadata.GenericParameters);
+        Assert.Equal("<T>", metadata.GenericParameters);
+        Assert.Equal("where T : class", metadata.GenericParametersConstraints);
+
     }
 
     [Fact]
@@ -150,7 +154,8 @@ public class ParsingTest
         Assert.Empty(metadata.Attributes);
         Assert.Equal("public partial class", metadata.Modifiers);
         Assert.Equal("OrderService", metadata.Name);
-        Assert.Equal("<T> where T : class", metadata.GenericParameters);
+        Assert.Equal("<T>", metadata.GenericParameters);
+        Assert.Equal("where T : class", metadata.GenericParametersConstraints);
     }
 
     [Fact]
@@ -175,7 +180,8 @@ public class ParsingTest
         Assert.Contains("Model", metadata.Attributes);
         Assert.Equal("public partial class", metadata.Modifiers);
         Assert.Equal("OrderService", metadata.Name);
-        Assert.Equal("<T> where T : class", metadata.GenericParameters);
+        Assert.Equal("<T>", metadata.GenericParameters);
+        Assert.Equal("where T : class", metadata.GenericParametersConstraints);
     }
 
     [Fact]

@@ -13,30 +13,27 @@ static class CodeGenerator
         var returnType = methodInfo.ReturnType == "void" ? "Task" : $"Task<{methodInfo.ReturnType}>";
         var methodName = $"{methodInfo.Name.TrimEnd("Sync")}Async";
 
-        (var methodGenericParameters,
-         var methodGenericParametersConstraints) = methodInfo.GetMethodGenericParamsInfo(typeInfo);
+        var constraints = (methodInfo.GenericParametersConstraints.HasText() ? $" {methodInfo.GenericParametersConstraints.Trim()}" : "");
 
         return
-            $"{methodInfo.Modifiers} {returnType} {methodName}{methodGenericParameters}{methodInfo.Parameters}{methodGenericParametersConstraints}\n" +
+            $"{methodInfo.Modifiers} {returnType} {methodName}{methodInfo.GenericParameters}{methodInfo.Parameters}{constraints}\n" +
             $"    => Task.Run(() => {methodInfo.Name}{methodInfo.GenericParameters}{methodInfo.ParametersNames});";
     }
 
-    public static string GenerateSyncMethod(this MethodMetadata methodInfo, TypeMetadata typeInfo)
+    public static string GenerateSyncMethod(this MethodMetadata info)
     {
-        if (!methodInfo.IsAsync())
-            throw new Exception($"Cannot convert {methodInfo.Name} to synchronous method. Only async methods can be converted.");
+        if (!info.IsAsync())
+            throw new Exception($"Cannot convert {info.Name} to synchronous method. Only async methods can be converted.");
 
-        var returnType = methodInfo.ReturnType.AsyncToSyncReturnType();
-        var methodName = methodInfo.Name.EndsWith("Async") ? methodInfo.Name.TrimEnd("Async") : methodInfo.Name + "Sync";
+        var returnType = info.ReturnType.AsyncToSyncReturnType();
+        var methodName = info.Name.EndsWith("Async") ? info.Name.TrimEnd("Async") : info.Name + "Sync";
         var waitCall = (returnType == "void" ? "Wait()" : "Result");
 
-        (var methodGenericParameters,
-         var methodGenericParametersConstraints) = methodInfo.GetMethodGenericParamsInfo(typeInfo);
-
+        var constraints = (info.GenericParametersConstraints.HasText() ? $" {info.GenericParametersConstraints.Trim()}" : "");
 
         return
-            $"{methodInfo.Modifiers.DeleteWord("async")} {returnType} {methodName}{methodGenericParameters}{methodInfo.Parameters}{methodGenericParametersConstraints}\n" +
-            $"    => {methodInfo.Name}{methodInfo.GenericParameters}{methodInfo.ParametersNames}.{waitCall};";
+            $"{info.Modifiers.DeleteWord("async")} {returnType} {methodName}{info.GenericParameters}{info.Parameters}{constraints}\n" +
+            $"    => {info.Name}{info.GenericParameters}{info.ParametersNames}.{waitCall};";
     }
 
     public static string GenerateAsyncExtensionMethod(this MethodMetadata methodInfo, TypeMetadata typeInfo)
@@ -75,15 +72,15 @@ static class CodeGenerator
 
     static (string parameters, string constraints) GetMethodGenericParamsInfo(this MethodMetadata methodInfo, TypeMetadata typeInfo)
     {
-        var paramsItems =
-            typeInfo.GenericParameters.Trim('<', '>').Split(',').Select(x => x.Trim())
-              .Concat(
-            methodInfo.GenericParameters.Trim('<', '>').Split(',').Select(x => x.Trim()))
-              .Distinct()
-              .OrderBy(x => x);
+        if (!typeInfo.GenericParameters.HasText() && !methodInfo.GenericParameters.HasText())
+            return ("", "");
+
+        var paramsItems = typeInfo.GenericParameters?.Trim('<', '>').Split(',').Select(x => x.Trim()) ?? new string[0];
+        var paramsItems2 = methodInfo.GenericParameters?.Trim('<', '>').Split(',').Select(x => x.Trim()) ?? new string[0];
+
 
         // "type<T1, T3> + method<T1, T2>" => "<T1, T2, T3>"
-        var methodGenericParameters = $"<{paramsItems.JoinBy(", ")}>";
+        var methodGenericParameters = $"<{paramsItems.Concat(paramsItems2).Distinct().OrderBy(x => x).JoinBy(", ")}>";
 
         var methodGenericParametersConstraints = "";
         if (typeInfo.GenericParametersConstraints.HasText())

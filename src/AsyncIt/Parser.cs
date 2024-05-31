@@ -171,7 +171,7 @@ static class Parser
                 $"Alternatively you can specify different algorithm (e.g. {nameof(Algorithm.ExtensionMethods)} in the " +
                 $"`{nameof(AsyncAttribute)}` declaration). ");
 
-        code.AppendLine($"{indent}{typeMetadata.Modifiers} {typeMetadata.Name}{typeMetadata.GenericParameters}".TrimEnd())
+        code.AppendLine($"{indent}{typeMetadata.Modifiers} {typeMetadata.Name}{typeMetadata.GenericParameters} {typeMetadata.GenericParametersConstraints}".TrimEnd())
             .AppendLine($"{indent}{{");
 
         var methodsCode = new StringBuilder();
@@ -184,11 +184,11 @@ static class Parser
                     methodImplementation = item.GenerateAsyncMethod(typeMetadata);
                     break;
                 case Interface.Sync:
-                    methodImplementation = item.GenerateSyncMethod(typeMetadata);
+                    methodImplementation = item.GenerateSyncMethod();
                     break;
                 case Interface.Full:
                     methodImplementation = item.IsAsync()
-                        ? item.GenerateSyncMethod(typeMetadata)
+                        ? item.GenerateSyncMethod()
                         : item.GenerateAsyncMethod(typeMetadata);
                     break;
             }
@@ -247,16 +247,21 @@ static class Parser
         var attributeList = all.TakeOutWhile(x => (x.Element is AttributeListSyntax)).Select(x => x.Element as AttributeListSyntax);
         var modifiers = all.TakeOutWhile(x => !x.Element.IsToken(SyntaxKind.IdentifierToken));
         var name = all.TakeOutFirst();
-        var genericParameters = all.TakeOutFirst();
-        var genericParametersConstraints = all;
+        var baseList = all.Select(x => x.Element).OfType<BaseListSyntax>().FirstOrDefault()?.ToString();
+        var genericParameters = all.Select(x => x.Element).OfType<TypeParameterListSyntax>().FirstOrDefault()?.ToString() ?? "";
+        var genericParametersConstraints = all.Select(x => x.Element)
+                                              .OfType<TypeParameterConstraintClauseSyntax>()
+                                              .Select(x => x.ToString())
+                                              .JoinBy(" ");
 
         var metadata = new TypeMetadata();
         metadata.UsingNamespaces = usingNamespaces;
         metadata.Attributes = attributeList.GetAttributes();
         metadata.Modifiers = modifiers.Select(x => x.Text).JoinBy(" ");
         metadata.Name = name.Text;
-        metadata.GenericParameters = genericParameters.Text;
-        metadata.GenericParametersConstraints = genericParametersConstraints.Select(x => x.Text).JoinBy(" ");
+        metadata.BaseList = baseList;
+        metadata.GenericParameters = genericParameters;
+        metadata.GenericParametersConstraints = genericParametersConstraints;
 
         return metadata;
     }
@@ -289,7 +294,7 @@ static class Parser
         var retureType = all.TakeOutFirst();
         var signature = all.TakeOutWhile(x => !(x.Element is ParameterListSyntax));
         var parameters = all.TakeOutFirst();
-        var genericParametersConstraints = all.Where(x => x.Element is TypeParameterConstraintClauseSyntax).Select(x=>x.Text).JoinBy(" ");
+        var genericParametersConstraints = all.Where(x => x.Element is TypeParameterConstraintClauseSyntax).Select(x => x.Text).JoinBy(" ");
         var invokParameters = (parameters.Element as ParameterListSyntax).Parameters
                                                                          .Select(x => x.GetLastToken().Text);
 
@@ -424,7 +429,7 @@ static class Parser
             if (parent is TypeDeclarationSyntax ts)
             {
                 var metadata = ts.GetMetadata();
-                statements.Add($"{metadata.Modifiers} {metadata.Name}{metadata.GenericParameters}".TrimEnd());
+                statements.Add($"{metadata.Modifiers} {metadata.Name}{metadata.GenericParameters}{metadata.GenericParametersConstraints}".TrimEnd());
             }
 
             parent = parent.Parent;

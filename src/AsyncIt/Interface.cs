@@ -31,6 +31,7 @@ class TypeMetadata
     public string Modifiers = "";                           // public, static, sealed etc
     public string Namespace = "";
     public string Name = "";
+    public string BaseList = "";                            // list of base classes
     public string GenericParameters = "";                   // method generic type params
     public string GenericParametersConstraints = "";        // generic type constraints
     public MethodMetadata[] Methods = new MethodMetadata[0];
