@@ -35,6 +35,7 @@ namespace AsyncIt
         }
         public Algorithm Algorithm { get; set; }
         public Interface Interface { get; set; }
+        internal string TypeGenericArgs;
     }
 
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]

@@ -2,62 +2,98 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 static class CodeGenerator
 {
-    public static string GenerateAsyncMethod(this MethodMetadata info)
+    public static string GenerateAsyncMethod(this MethodMetadata methodInfo, TypeMetadata typeInfo)
     {
-        var returnType = info.ReturnType == "void" ? "Task" : $"Task<{info.ReturnType}>";
+        var returnType = methodInfo.ReturnType == "void" ? "Task" : $"Task<{methodInfo.ReturnType}>";
+        var methodName = $"{methodInfo.Name.TrimEnd("Sync")}Async";
+
+        (var methodGenericParameters,
+         var methodGenericParametersConstraints) = methodInfo.GetMethodGenericParamsInfo(typeInfo);
 
         return
-            $"{info.Modifiers} {returnType} {info.Name.TrimEnd("Sync")}Async{info.GenericParameters}{info.Parameters}\n" +
-            $"    => Task.Run(() => {info.Name}{info.GenericParameters}{info.ParametersNames});";
+            $"{methodInfo.Modifiers} {returnType} {methodName}{methodGenericParameters}{methodInfo.Parameters}{methodGenericParametersConstraints}\n" +
+            $"    => Task.Run(() => {methodInfo.Name}{methodInfo.GenericParameters}{methodInfo.ParametersNames});";
     }
 
-    public static string GenerateAsyncExtensionMethod(this MethodMetadata info, TypeMetadata typeMetadata)
+    public static string GenerateSyncMethod(this MethodMetadata methodInfo, TypeMetadata typeInfo)
     {
-        var baseType = $"{typeMetadata.Name}{typeMetadata.GenericParameters}";
-        var methodVisibility = GetExtensionMethodVisibility(typeMetadata);
-        var returnType = info.ReturnType == "void" ? "Task" : $"Task<{info.ReturnType}>";
-        var methodParameters = info.Parameters.Replace("(", $"(this {baseType} instance, ");
+        if (!methodInfo.IsAsync())
+            throw new Exception($"Cannot convert {methodInfo.Name} to synchronous method. Only async methods can be converted.");
 
-        return
-            $"{methodVisibility} static {returnType} {info.Name.TrimEnd("Sync")}Async{info.GenericParameters}{methodParameters}\n" +
-            $"    => Task.Run(() => instance.{info.Name}{info.GenericParameters}{info.ParametersNames});";
-    }
-    public static string GenerateSyncMethod(this MethodMetadata info)
-    {
-        if (!info.IsAsync())
-            throw new Exception($"Cannot convert {info.Name} to synchronous method. Only async methods can be converted.");
-
-        var returnType = info.ReturnType.AsyncToSyncReturnType();
-        var methodName = info.Name.EndsWith("Async") ? info.Name.TrimEnd("Async") : info.Name + "Sync";
+        var returnType = methodInfo.ReturnType.AsyncToSyncReturnType();
+        var methodName = methodInfo.Name.EndsWith("Async") ? methodInfo.Name.TrimEnd("Async") : methodInfo.Name + "Sync";
         var waitCall = (returnType == "void" ? "Wait()" : "Result");
 
+        (var methodGenericParameters,
+         var methodGenericParametersConstraints) = methodInfo.GetMethodGenericParamsInfo(typeInfo);
+
+
         return
-            $"{info.Modifiers.DeleteWord("async")} {returnType} {methodName}{info.GenericParameters}{info.Parameters}\n" +
-            $"    => {info.Name}{info.GenericParameters}{info.ParametersNames}.{waitCall};";
+            $"{methodInfo.Modifiers.DeleteWord("async")} {returnType} {methodName}{methodGenericParameters}{methodInfo.Parameters}{methodGenericParametersConstraints}\n" +
+            $"    => {methodInfo.Name}{methodInfo.GenericParameters}{methodInfo.ParametersNames}.{waitCall};";
     }
 
-    public static string GenerateSyncExtensionMethod(this MethodMetadata info, TypeMetadata typeMetadata)
+    public static string GenerateAsyncExtensionMethod(this MethodMetadata methodInfo, TypeMetadata typeInfo)
     {
-        var baseType = $"{typeMetadata.Name}{typeMetadata.GenericParameters}";
-        var methodVisibility = GetExtensionMethodVisibility(typeMetadata);
+        var baseType = $"{typeInfo.Name}{typeInfo.GenericParameters}";
+        var methodVisibility = GetExtensionMethodVisibility(typeInfo);
+        var returnType = methodInfo.ReturnType == "void" ? "Task" : $"Task<{methodInfo.ReturnType}>";
+        var methodParameters = methodInfo.Parameters.Replace("(", $"(this {baseType} instance, ");
+        var methodName = $"{methodInfo.Name.TrimEnd("Sync")}Async";
 
-        if (!info.IsAsync())
-            throw new Exception($"Cannot convert {info.Name} to synchronous method. Only async methods can be converted.");
+        (var methodGenericParameters, var methodGenericParametersConstraints) = methodInfo.GetMethodGenericParamsInfo(typeInfo);
 
-        var returnType = info.ReturnType.AsyncToSyncReturnType();
-        var methodParameters = info.Parameters.Replace("(", $"(this {baseType} instance, ");
-        var methodName = info.Name.EndsWith("Async") ? info.Name.TrimEnd("Async") : info.Name + "Sync";
+        return
+            $"{methodVisibility} static {returnType} {methodName}{methodGenericParameters}{methodParameters}{methodGenericParametersConstraints}\n" +
+            $"    => Task.Run(() => instance.{methodInfo.Name}{methodInfo.GenericParameters}{methodInfo.ParametersNames});";
+    }
+    public static string GenerateSyncExtensionMethod(this MethodMetadata methodInfo, TypeMetadata typeInfo)
+    {
+        var baseType = $"{typeInfo.Name}{typeInfo.GenericParameters}";
+        var methodVisibility = GetExtensionMethodVisibility(typeInfo);
+
+        if (!methodInfo.IsAsync())
+            throw new Exception($"Cannot convert {methodInfo.Name} to synchronous method. Only async methods can be converted.");
+
+        var returnType = methodInfo.ReturnType.AsyncToSyncReturnType();
+        var methodParameters = methodInfo.Parameters.Replace("(", $"(this {baseType} instance, ");
+        var methodName = methodInfo.Name.EndsWith("Async") ? methodInfo.Name.TrimEnd("Async") : methodInfo.Name + "Sync";
         var waitCall = (returnType == "void" ? "Wait()" : "Result");
 
+        (var methodGenericParameters, var methodGenericParametersConstraints) = methodInfo.GetMethodGenericParamsInfo(typeInfo);
+
         return
-            $"{methodVisibility} static {returnType} {methodName}{info.GenericParameters}{methodParameters}\n" +
-            $"    => instance.{info.Name}{info.GenericParameters}{info.ParametersNames}.{waitCall};";
+            $"{methodVisibility} static {returnType} {methodName}{methodGenericParameters}{methodParameters}{methodGenericParametersConstraints}\n" +
+            $"    => instance.{methodInfo.Name}{methodInfo.GenericParameters}{methodInfo.ParametersNames}.{waitCall};";
     }
 
+    static (string parameters, string constraints) GetMethodGenericParamsInfo(this MethodMetadata methodInfo, TypeMetadata typeInfo)
+    {
+        var paramsItems =
+            typeInfo.GenericParameters.Trim('<', '>').Split(',').Select(x => x.Trim())
+              .Concat(
+            methodInfo.GenericParameters.Trim('<', '>').Split(',').Select(x => x.Trim()))
+              .Distinct()
+              .OrderBy(x => x);
+
+        // "type<T1, T3> + method<T1, T2>" => "<T1, T2, T3>"
+        var methodGenericParameters = $"<{paramsItems.JoinBy(", ")}>";
+
+        var methodGenericParametersConstraints = "";
+        if (typeInfo.GenericParametersConstraints.HasText())
+            methodGenericParametersConstraints += " " + typeInfo.GenericParametersConstraints;
+
+        if (methodInfo.GenericParametersConstraints.HasText())
+            methodGenericParametersConstraints += " " + methodInfo.GenericParametersConstraints;
+
+        return (methodGenericParameters, methodGenericParametersConstraints);
+    }
     static string GetExtensionMethodVisibility(TypeMetadata typeMetadata)
     {
         // The type of arg in `Method( this Type arg,...` must be the same visibility as the type in typeMetadata

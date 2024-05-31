@@ -52,6 +52,9 @@ static class Parser
         foreach (var ns in typeMetadata.UsingNamespaces)
             code.AppendLine(ns);
 
+        if (!typeMetadata.UsingNamespaces.Contains("using System.Threading.Tasks;"))
+            code.AppendLine("using System.Threading.Tasks;");
+
         var indent = "";
 
         if (typeMetadata.Namespace.Any())
@@ -63,7 +66,13 @@ static class Parser
             indent = "    ";
         }
 
-        var attribute = new AsyncAttribute { Interface = asmAttribute.Interface };
+        var attribute = new AsyncAttribute
+        {
+            Interface = asmAttribute.Interface,
+        };
+
+        if (asmAttribute.Type.GenericTypeArguments.Any())
+            attribute.TypeGenericArgs = $"<{asmAttribute.Type.GenericTypeArguments.Select(x => x.FullName).JoinBy(", ")}>";
 
         GenerateExtensionClass(attribute, code, typeMetadata, typeMetadata.Methods, indent);
 
@@ -77,7 +86,6 @@ static class Parser
 
     public static (string type, string code) GenerateExtraCodeForType(this TypeDeclarationSyntax type, AsyncAttribute attribute)
     {
-
         var code = new StringBuilder();
         var typeMetadata = type.GetMetadata();
         var methodsMetadata = type.Members.OfType<MethodDeclarationSyntax>()
@@ -114,9 +122,11 @@ static class Parser
         return (typeMetadata.Name, code.ToString().TrimEnd());
     }
 
-    private static void GenerateExtensionClass(AsyncAttribute attribute, StringBuilder code, TypeMetadata typeMetadata, IEnumerable<MethodMetadata> methodsMetadata, string indent)
+    static void GenerateExtensionClass(AsyncAttribute attribute, StringBuilder code, TypeMetadata typeMetadata, IEnumerable<MethodMetadata> methodsMetadata, string indent)
     {
-        code.AppendLine($"{indent}public static class {typeMetadata.Name}Extensions{typeMetadata.GenericParameters}".TrimEnd())
+        // typeMetadata.GenericParameters = attribute.TypeGenericArgs;
+
+        code.AppendLine($"{indent}public static class {typeMetadata.Name}Extensions".TrimEnd())
                         .AppendLine($"{indent}{{");
 
         var methodsCode = new StringBuilder();
@@ -171,15 +181,15 @@ static class Parser
             switch (attribute.Interface)
             {
                 case Interface.Async:
-                    methodImplementation = item.GenerateAsyncMethod();
+                    methodImplementation = item.GenerateAsyncMethod(typeMetadata);
                     break;
                 case Interface.Sync:
-                    methodImplementation = item.GenerateSyncMethod();
+                    methodImplementation = item.GenerateSyncMethod(typeMetadata);
                     break;
                 case Interface.Full:
                     methodImplementation = item.IsAsync()
-                        ? item.GenerateSyncMethod()
-                        : item.GenerateAsyncMethod();
+                        ? item.GenerateSyncMethod(typeMetadata)
+                        : item.GenerateAsyncMethod(typeMetadata);
                     break;
             }
 
@@ -237,16 +247,16 @@ static class Parser
         var attributeList = all.TakeOutWhile(x => (x.Element is AttributeListSyntax)).Select(x => x.Element as AttributeListSyntax);
         var modifiers = all.TakeOutWhile(x => !x.Element.IsToken(SyntaxKind.IdentifierToken));
         var name = all.TakeOutFirst();
-        var genericParameters = all;
+        var genericParameters = all.TakeOutFirst();
+        var genericParametersConstraints = all;
 
         var metadata = new TypeMetadata();
         metadata.UsingNamespaces = usingNamespaces;
         metadata.Attributes = attributeList.GetAttributes();
         metadata.Modifiers = modifiers.Select(x => x.Text).JoinBy(" ");
         metadata.Name = name.Text;
-        metadata.GenericParameters = genericParameters.Select(x => x.Text).JoinBy(" ");
-
-        // var rawAttrNodes = attributeList.GetAttributeNodes();
+        metadata.GenericParameters = genericParameters.Text;
+        metadata.GenericParametersConstraints = genericParametersConstraints.Select(x => x.Text).JoinBy(" ");
 
         return metadata;
     }
@@ -279,6 +289,7 @@ static class Parser
         var retureType = all.TakeOutFirst();
         var signature = all.TakeOutWhile(x => !(x.Element is ParameterListSyntax));
         var parameters = all.TakeOutFirst();
+        var genericParametersConstraints = all.Where(x => x.Element is TypeParameterConstraintClauseSyntax).Select(x=>x.Text).JoinBy(" ");
         var invokParameters = (parameters.Element as ParameterListSyntax).Parameters
                                                                          .Select(x => x.GetLastToken().Text);
 
@@ -289,6 +300,7 @@ static class Parser
         metadata.ReturnType = retureType.Text;
         metadata.Name = signature.FirstOrDefault()?.Text;
         metadata.GenericParameters = signature.Skip(1).FirstOrDefault()?.Text;
+        metadata.GenericParametersConstraints = genericParametersConstraints;
         metadata.Parameters = parameters.Text;
         metadata.ParametersNames = $"({invokParameters.JoinBy(", ")})";
 
@@ -305,7 +317,8 @@ static class Parser
         namespace System.IO
         {
         ===
-            public static class Directory
+            public class GenericClassTest2<t, t2> : Attribute
+                where t: class, new()
         ===
             {
                 public static | DirectoryInfo |CreateDirectory|(string path|, int index|)|;*/
@@ -315,9 +328,16 @@ static class Parser
             typeDeclaration,
             methodsDeclaration, _))) = type.Split(new[] { "===" }, StringSplitOptions.None);
 
-        var (typeName, inheritance, _) = typeDeclaration.Trim().Split(':').Select(x => x.Trim()).ToArray();
+        var declarationParts = typeDeclaration.Trim().Split('\n').Select(x => x.Trim()).ToArray();
 
-        var (rawTypeName, genericParams, _) = typeName.Split(' ').Last().Split("<".ToCharArray(), 2);
+        var typeConstraints = declarationParts.Count() > 1 ?
+            declarationParts.Last() :
+            null;
+
+        var (typeName, inheritance, _) = declarationParts.First().Trim().Split(':').Select(x => x.Trim()).ToArray();
+
+        var (rawTypeName, genericParams, _) = typeName.Split("<".ToCharArray(), 2);
+        rawTypeName = rawTypeName.Split(' ').Last();
 
         if (inheritance?.Any() == true)
             inheritance = $" : {inheritance}";
@@ -329,10 +349,11 @@ static class Parser
         {
             UsingNamespaces = usingNamespaces.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries),
             Attributes = new string[0],
-            Modifiers = "",
+            Modifiers = "public",
             Namespace = namespaceDeclaration.Trim('{', '\n', '\r').Split(' ').Last(),
             Name = rawTypeName,
-            GenericParameters = genericParams
+            GenericParameters = genericParams,
+            GenericParametersConstraints = typeConstraints
         };
 
         typeMetadata.Methods = methodsDeclaration.Trim(' ', '\n', '\r', '{', '}')
@@ -341,18 +362,36 @@ static class Parser
             .Where(x => x.Any() && x.EndsWith(";")) // methods only
             .Select(x =>
             {
+                // public | Task<T1> |SendAsync<T1, T2>|(T1 arg1|, T2 arg2|) where T1: class, new()|;
+
                 var parts = x.Split('|').Select(y => y.Trim()).ToArray();
 
+                var (rawName, generParam, _) = parts[2].Split("<".ToCharArray(), 2);
+                if (generParam.HasText())
+                    generParam = $"<{generParam}";
+
                 var parameters = parts.Skip(3)
-                    .TakeWhile(y => !y.EndsWith(")"))
-                    .Select(y => y.Trim('(', ','))
+                    .TakeWhile(y =>
+                        !y.EndsWith(")") &&
+                        !y.Replace(" ", "").StartsWith(")where"))
+                    .Select(y => y.Trim('(', ',').Trim())
                     .Where(y => y.Any());
+
+                var constrtaints = parts.Skip(3)
+                    .SkipWhile(y => !y.Replace(" ", "").StartsWith(")where"))
+                    .JoinBy("")
+                    .TrimStart(')')
+                    .TrimEnd(';')
+                    .Trim();
+
 
                 return new MethodMetadata
                 {
                     Modifiers = parts[0],
                     ReturnType = parts[1],
-                    Name = parts[2],
+                    GenericParameters = generParam,
+                    GenericParametersConstraints = constrtaints,
+                    Name = rawName,
                     Parameters = $"({parameters.JoinBy(", ")})",
                     ParametersNames = $"({parameters.Select(y => y.Split(' ').Last()).JoinBy(", ")})"
                 };

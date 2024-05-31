@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AsyncIt.Tests.IntegrationTests;
-public class FullInterfaceTests
+public class LocalTypes_FullInterface_Tests
 {
     [Fact]
     public void GenerateFullPartialTypeForPublicType()

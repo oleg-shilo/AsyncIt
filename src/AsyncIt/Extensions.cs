@@ -174,6 +174,9 @@ static class Extensions
                   .TrimStart("Task<")
                   .TrimStart("System.Task<")
                   .TrimEnd(">");
+    internal static (string name, string genericParams) GetNameInfo(this MethodMetadata info)
+        => (info.Name, info.GenericParameters.HasText() ? $"<{info.GenericParameters}>" : "");
+
     internal static bool IsAsync(this MethodMetadata info)
         => info.ReturnType == "Task"
             ||

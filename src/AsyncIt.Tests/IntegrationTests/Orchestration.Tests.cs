@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AsyncIt.Tests.IntegrationTests;
-public class OrchestrationTests
+public class Orchestration_Tests
 {
     [Fact]
     public void ShouldIgnorePrivateAndProtectedMethods()
