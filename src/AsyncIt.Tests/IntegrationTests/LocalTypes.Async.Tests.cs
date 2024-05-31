@@ -7,10 +7,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AsyncIt.Tests.IntegrationTests;
 
-public class LocalTypes_Async_Tests
+public class LocalTypes_Async_Tests : TestBase
 {
-
-
     [Fact]
     public void GeneratePartialTypeForNestedTypeWithNestedNamespace()
     {
@@ -88,11 +86,6 @@ public class LocalTypes_Async_Tests
             """, newCode.First().Value);
     }
 
-    [Fact]
-    public void ShouldGenerateXmlDocForeExtendedClasses()
-    {
-        Assert.Fail();
-    }
 
 
     [Fact]

@@ -63,6 +63,19 @@ public class MixedGenericClassTest<T1, T2> : Attribute where T1 : class, new()
 
 public static class MixedGenericClassTestExtensions
 {
+    /// <summary>
+    /// <see cref="MixedGenericClassTest{T1, T2}.Post{T3, T4}(T1, T2, T3, T4)"/>"/>
+    /// </summary>
+    /// <typeparam name="T1"></typeparam>
+    /// <typeparam name="T2"></typeparam>
+    /// <typeparam name="T3"></typeparam>
+    /// <typeparam name="T4"></typeparam>
+    /// <param name="instance"></param>
+    /// <param name="arg1"></param>
+    /// <param name="arg2"></param>
+    /// <param name="arg3"></param>
+    /// <param name="arg4"></param>
+    /// <returns></returns>
     public static Task PostAsync<T1, T2, T3, T4>(this MixedGenericClassTest<T1, T2> instance, T1 arg1, T2 arg2, T3 arg3, T4 arg4) where T1 : class, new()
         => Task.Run(() => instance.Post<T3, T4>(arg1, arg2, arg3, arg4));
     public static T4 Send<T1, T2, T3, T4>(this MixedGenericClassTest<T1, T2> instance, T1 arg1, T2 arg2, T3 arg3) where T1 : class, new() where T4 : new()

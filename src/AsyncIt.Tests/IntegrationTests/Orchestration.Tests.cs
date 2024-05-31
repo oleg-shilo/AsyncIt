@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AsyncIt.Tests.IntegrationTests;
-public class Orchestration_Tests
+public class Orchestration_Tests : TestBase
 {
     [Fact]
     public void ShouldIgnorePrivateAndProtectedMethods()
@@ -130,6 +130,12 @@ public class Orchestration_Tests
                     => Task.Run(() => GetUser(id));
             }
             """, newCode);
+    }
+
+    [Fact]
+    public void ShouldGenerateXmlDocForeExtendedClasses()
+    {
+        Assert.Fail();
     }
 
     [Fact]

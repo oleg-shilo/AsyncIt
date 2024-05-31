@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AsyncIt.Tests.IntegrationTests;
 
-public class ExternalTypes_Tests
+public class ExternalTypes_Tests : TestBase
 {
 
     [Fact]

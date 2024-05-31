@@ -184,11 +184,11 @@ static class Parser
                     methodImplementation = item.GenerateAsyncMethod(typeMetadata);
                     break;
                 case Interface.Sync:
-                    methodImplementation = item.GenerateSyncMethod();
+                    methodImplementation = item.GenerateSyncMethod(typeMetadata);
                     break;
                 case Interface.Full:
                     methodImplementation = item.IsAsync()
-                        ? item.GenerateSyncMethod()
+                        ? item.GenerateSyncMethod(typeMetadata)
                         : item.GenerateAsyncMethod(typeMetadata);
                     break;
             }

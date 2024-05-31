@@ -11,6 +11,14 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace AsyncIt.Tests;
 
+public class TestBase
+{
+    public TestBase()
+    {
+        CodeGenerator.SuppressXmlDocGeneration = true;
+
+    }
+}
 static class TestExtensions
 {
     public static ISymbol SymbolAt(this Document doc, int pos)

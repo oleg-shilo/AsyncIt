@@ -8,6 +8,17 @@ using Microsoft.CodeAnalysis.CSharp;
 
 static class CodeGenerator
 {
+    public static bool SuppressXmlDocGeneration = false;
+
+    public static string GenerateXmlDoc(string context, MethodMetadata methodInfo, TypeMetadata typeInfo)
+    {
+        if (!SuppressXmlDocGeneration)
+            return $"/// <summary>\n" +
+                   $"/// The {context} version of " +
+                       $"&lt;see cref=\"{typeInfo.Name}.{methodInfo.Name}{methodInfo.GenericParameters.Replace("<", "{").Replace(">", "}")}{methodInfo.Parameters}\"&gt;.\n" +
+                   $"/// </summary>\n";
+        return "";
+    }
     public static string GenerateAsyncMethod(this MethodMetadata methodInfo, TypeMetadata typeInfo)
     {
         var returnType = methodInfo.ReturnType == "void" ? "Task" : $"Task<{methodInfo.ReturnType}>";
@@ -15,12 +26,15 @@ static class CodeGenerator
 
         var constraints = (methodInfo.GenericParametersConstraints.HasText() ? $" {methodInfo.GenericParametersConstraints.Trim()}" : "");
 
-        return
+        var methodCode = GenerateXmlDoc("asynchronous", methodInfo, typeInfo) +
+
             $"{methodInfo.Modifiers} {returnType} {methodName}{methodInfo.GenericParameters}{methodInfo.Parameters}{constraints}\n" +
             $"    => Task.Run(() => {methodInfo.Name}{methodInfo.GenericParameters}{methodInfo.ParametersNames});";
+
+        return methodCode;
     }
 
-    public static string GenerateSyncMethod(this MethodMetadata info)
+    public static string GenerateSyncMethod(this MethodMetadata info, TypeMetadata typeInfo)
     {
         if (!info.IsAsync())
             throw new Exception($"Cannot convert {info.Name} to synchronous method. Only async methods can be converted.");
@@ -31,9 +45,12 @@ static class CodeGenerator
 
         var constraints = (info.GenericParametersConstraints.HasText() ? $" {info.GenericParametersConstraints.Trim()}" : "");
 
-        return
+        var methodCode = GenerateXmlDoc("synchronous", info, typeInfo) +
+
             $"{info.Modifiers.DeleteWord("async")} {returnType} {methodName}{info.GenericParameters}{info.Parameters}{constraints}\n" +
             $"    => {info.Name}{info.GenericParameters}{info.ParametersNames}.{waitCall};";
+
+        return methodCode;
     }
 
     public static string GenerateAsyncExtensionMethod(this MethodMetadata methodInfo, TypeMetadata typeInfo)
@@ -46,7 +63,7 @@ static class CodeGenerator
 
         (var methodGenericParameters, var methodGenericParametersConstraints) = methodInfo.GetMethodGenericParamsInfo(typeInfo);
 
-        return
+        return GenerateXmlDoc("asynchronous", methodInfo, typeInfo) +
             $"{methodVisibility} static {returnType} {methodName}{methodGenericParameters}{methodParameters}{methodGenericParametersConstraints}\n" +
             $"    => Task.Run(() => instance.{methodInfo.Name}{methodInfo.GenericParameters}{methodInfo.ParametersNames});";
     }
@@ -65,7 +82,7 @@ static class CodeGenerator
 
         (var methodGenericParameters, var methodGenericParametersConstraints) = methodInfo.GetMethodGenericParamsInfo(typeInfo);
 
-        return
+        return GenerateXmlDoc("synchronous", methodInfo, typeInfo) +
             $"{methodVisibility} static {returnType} {methodName}{methodGenericParameters}{methodParameters}{methodGenericParametersConstraints}\n" +
             $"    => instance.{methodInfo.Name}{methodInfo.GenericParameters}{methodInfo.ParametersNames}.{waitCall};";
     }
