@@ -10,15 +10,44 @@ static class CodeGenerator
 {
     public static bool SuppressXmlDocGeneration = false;
 
-    public static string GenerateXmlDoc(string context, MethodMetadata methodInfo, TypeMetadata typeInfo)
+    public static string GenerateXmlDoc(string context, MethodMetadata method, TypeMetadata type, bool force = false)
     {
-        if (!SuppressXmlDocGeneration)
-            return $"/// <summary>\n" +
+        if (!SuppressXmlDocGeneration || force)
+        {
+            var typeGenericParams = type.GenericParameters.Replace("<", "{").Replace(">", "}");
+            var methodGenericParams = method.GenericParameters.Replace("<", "{").Replace(">", "}");
+            var methodParams = method.Parameters;
+
+            if (method.ParametersNames.HasText())
+            {
+                // method.Parameters = "(T1 arg1, T2 arg2, T3 arg3, T4 arg4)";
+                // method.ParametersNames = "(arg1, arg2, arg3, arg4)";
+
+                var names = method.ParametersNames.Trim('(', ')').Split(',').Select(x => x.Trim());
+
+                foreach (var item in names)
+                {
+                    var pattern = $" {item},";
+                    var replacement = ",";
+
+                    if (names.Last() == item)
+                    {
+                        pattern = $" {item})";
+                        replacement = ")";
+                    }
+
+                    methodParams = methodParams.Replace(pattern, replacement);
+                }
+            }
+
+            return $"/// <summary>{Runtime.NewLine}" +
                    $"/// The {context} version of " +
-                       $"&lt;see cref=\"{typeInfo.Name}.{methodInfo.Name}{methodInfo.GenericParameters.Replace("<", "{").Replace(">", "}")}{methodInfo.Parameters}\"&gt;.\n" +
-                   $"/// </summary>\n";
+                       $"<see cref=\"{type.Name}{typeGenericParams}.{method.Name}{methodGenericParams}{methodParams}\"/>.{Runtime.NewLine}" +
+                   $"/// </summary>{Runtime.NewLine}";
+        }
         return "";
     }
+
     public static string GenerateAsyncMethod(this MethodMetadata methodInfo, TypeMetadata typeInfo)
     {
         var returnType = methodInfo.ReturnType == "void" ? "Task" : $"Task<{methodInfo.ReturnType}>";

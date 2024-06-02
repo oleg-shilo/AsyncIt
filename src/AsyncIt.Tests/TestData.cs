@@ -65,6 +65,7 @@ public static class MixedGenericClassTestExtensions
 {
     /// <summary>
     /// <see cref="MixedGenericClassTest{T1, T2}.Post{T3, T4}(T1, T2, T3, T4)"/>"/>
+    /// <see cref="MixedGenericClassTest{T1, T2}.Foo()"/>
     /// </summary>
     /// <typeparam name="T1"></typeparam>
     /// <typeparam name="T2"></typeparam>

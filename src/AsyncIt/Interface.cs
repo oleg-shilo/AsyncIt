@@ -40,11 +40,11 @@ class TypeMetadata
 class MethodMetadata
 {
     public string[] Attributes;
-    public string Modifiers;                        // public, static, sealed etc
-    public string ReturnType;                       // int, string, Task<T> etc
-    public string Name;                             // method name
-    public string GenericParameters;                // method generic type params <T, T2>
-    public string GenericParametersConstraints;     // where T1 : class, new()
-    public string Parameters;                       // (int id, string name)
-    public string ParametersNames;                  // id, name
+    public string Modifiers = "";                        // public, static, sealed etc
+    public string ReturnType = "";                       // int, string, Task<T> etc
+    public string Name = "";                             // method name
+    public string GenericParameters = "";                // method generic type params <T, T2>
+    public string GenericParametersConstraints = "";     // where T1 : class, new()
+    public string Parameters = "";                       // (int id, string name)
+    public string ParametersNames = "";                  // id, name
 }

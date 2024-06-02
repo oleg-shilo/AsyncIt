@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -133,9 +134,42 @@ public class Orchestration_Tests : TestBase
     }
 
     [Fact]
-    public void ShouldGenerateXmlDocForeExtendedClasses()
+    public void ShouldGenerateXmlDocForGenericExtendedMethod()
     {
-        Assert.Fail();
+        var method = new MethodMetadata() { Name = "Post" };
+        var type = new TypeMetadata() { Name = "Http" };
+
+        type.GenericParameters = "<T1, T2>";
+        method.GenericParameters = "<T3, T4>";
+        method.Parameters = "(T1 arg1, T2 arg2, T3 arg3, T4 arg4)";
+        method.ParametersNames = "(arg1, arg2, arg3, arg4)";
+
+        var xml = CodeGenerator.GenerateXmlDoc("synchronous", method, type, force: true);
+
+        Assert.Equal("""
+            /// <summary>
+            /// The synchronous version of <see cref="Http{T1, T2}.Post{T3, T4}(T1, T2, T3, T4)"/>.
+            /// </summary>
+            
+            """,
+            xml);
+
+    }
+    [Fact]
+    public void ShouldGenerateXmlDocForSimpleExtendedMethod()
+    {
+        var method = new MethodMetadata() { Name = "Post" };
+        var type = new TypeMetadata() { Name = "Http" };
+
+        var xml = CodeGenerator.GenerateXmlDoc("asynchronous", method, type, force: true);
+
+        Assert.Equal("""
+            /// <summary>
+            /// The asynchronous version of <see cref="Http.Post"/>.
+            /// </summary>
+            
+            """,
+            xml);
     }
 
     [Fact]
