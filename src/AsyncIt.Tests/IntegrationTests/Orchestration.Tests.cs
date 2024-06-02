@@ -151,7 +151,7 @@ public class Orchestration_Tests : TestBase
             /// The synchronous version of <see cref="Http{T1, T2}.Post{T3, T4}(T1, T2, T3, T4)"/>.
             /// </summary>
             
-            """,
+            """.Replace("\r\n", "\n"),
             xml);
 
     }
@@ -168,7 +168,7 @@ public class Orchestration_Tests : TestBase
             /// The asynchronous version of <see cref="Http.Post"/>.
             /// </summary>
             
-            """,
+            """.Replace("\r\n", "\n"),
             xml);
     }
 

@@ -258,10 +258,10 @@ static class Parser
         metadata.UsingNamespaces = usingNamespaces;
         metadata.Attributes = attributeList.GetAttributes();
         metadata.Modifiers = modifiers.Select(x => x.Text).JoinBy(" ");
-        metadata.Name = name.Text;
-        metadata.BaseList = baseList;
-        metadata.GenericParameters = genericParameters;
-        metadata.GenericParametersConstraints = genericParametersConstraints;
+        metadata.Name = name.Text ?? "";
+        metadata.BaseList = baseList ?? "";
+        metadata.GenericParameters = genericParameters ?? "";
+        metadata.GenericParametersConstraints = genericParametersConstraints ?? "";
 
         return metadata;
     }
@@ -301,12 +301,12 @@ static class Parser
         var metadata = new MethodMetadata();
 
         metadata.Attributes = attributeList.GetAttributes();
-        metadata.Modifiers = modifiers.Select(x => x.Text).JoinBy(" ");
-        metadata.ReturnType = retureType.Text;
-        metadata.Name = signature.FirstOrDefault()?.Text;
-        metadata.GenericParameters = signature.Skip(1).FirstOrDefault()?.Text;
-        metadata.GenericParametersConstraints = genericParametersConstraints;
-        metadata.Parameters = parameters.Text;
+        metadata.Modifiers = modifiers.Select(x => x.Text).JoinBy(" ") ?? "";
+        metadata.ReturnType = retureType.Text ?? "";
+        metadata.Name = signature.FirstOrDefault()?.Text ?? "";
+        metadata.GenericParameters = signature.Skip(1).FirstOrDefault()?.Text ?? "";
+        metadata.GenericParametersConstraints = genericParametersConstraints ?? "";
+        metadata.Parameters = parameters.Text ?? "";
         metadata.ParametersNames = $"({invokParameters.JoinBy(", ")})";
 
         return metadata;

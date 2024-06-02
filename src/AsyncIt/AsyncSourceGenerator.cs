@@ -84,7 +84,7 @@ namespace AsyncIt
                 }
                 catch (Exception ex)
                 {
-                    Log.WriteLine(ex.Message);
+                    Log.WriteLine(ex.ToString());
                 }
             });
         }
@@ -133,7 +133,7 @@ namespace AsyncIt
                 }
                 catch (Exception ex)
                 {
-                    Log.WriteLine(ex.Message);
+                    Log.WriteLine(ex.ToString());
                 }
             });
         }
@@ -153,6 +153,9 @@ class Log
 {
     public static void WriteLine(string message)
     {
+        if (message.Contains("not set"))
+            Debug.Assert(false);
+
         message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
             .Select(x => $"async-me> {x}")
             .ToList()

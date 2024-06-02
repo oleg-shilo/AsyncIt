@@ -8,7 +8,8 @@ using Microsoft.CodeAnalysis.CSharp;
 
 static class CodeGenerator
 {
-    public static bool SuppressXmlDocGeneration = false;
+
+    internal static bool SuppressXmlDocGeneration = false; // for controlling XML generation during testing
 
     public static string GenerateXmlDoc(string context, MethodMetadata method, TypeMetadata type, bool force = false)
     {
@@ -40,10 +41,10 @@ static class CodeGenerator
                 }
             }
 
-            return $"/// <summary>{Runtime.NewLine}" +
+            return $"/// <summary>\n" +
                    $"/// The {context} version of " +
-                       $"<see cref=\"{type.Name}{typeGenericParams}.{method.Name}{methodGenericParams}{methodParams}\"/>.{Runtime.NewLine}" +
-                   $"/// </summary>{Runtime.NewLine}";
+                       $"<see cref=\"{type.Name}{typeGenericParams}.{method.Name}{methodGenericParams}{methodParams}\"/>.\n" +
+                   $"/// </summary>\n";
         }
         return "";
     }
