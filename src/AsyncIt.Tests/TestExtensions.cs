@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
+using System.Reflection;
 
 namespace AsyncIt.Tests;
 
@@ -16,7 +17,75 @@ public class TestBase
     public TestBase()
     {
         CodeGenerator.SuppressXmlDocGeneration = true;
+    }
 
+    internal static string thisAsm = Assembly.GetExecutingAssembly().Location;
+    internal static string asyncAsm = typeof(CodeGenerator).Assembly.Location;
+    internal static string projectDir = null;
+    internal static string ProjectDir
+    {
+        get
+        {
+            if (projectDir != null)
+                return projectDir;
+
+            projectDir = Path.Combine(Path.GetDirectoryName(thisAsm), "system-test");
+            Directory.CreateDirectory(projectDir);
+            return projectDir;
+
+        }
+    }
+
+    internal static void CreateProjectFile(string prjectName)
+    {
+        File.WriteAllText(Path.Combine(ProjectDir, prjectName), """
+            <Project Sdk="Microsoft.NET.Sdk">
+
+              <PropertyGroup>
+                <OutputType>Exe</OutputType>
+                <TargetFramework>net8.0</TargetFramework>
+                <RootNamespace>system_test</RootNamespace>
+                <ImplicitUsings>enable</ImplicitUsings>
+              </PropertyGroup>
+
+              <ItemGroup>
+                <Reference Include="AsyncIt">
+                  <HintPath>AsyncIt.dll</HintPath>
+                </Reference>
+              </ItemGroup>
+
+            </Project>
+            """);
+    }
+
+    internal static void SaveExtendableCode(string fileName, string code)
+    {
+        File.WriteAllText(Path.Combine(ProjectDir, fileName), code);
+        var newCode = CSharpSyntaxTree.ParseText(code).GenerateSourceForTypes().First().Value;
+        File.WriteAllText(Path.Combine(ProjectDir, Path.ChangeExtension(fileName, ".g.cs")), newCode);
+    }
+    internal static void SaveCodeFile(string fileName, string code)
+        => File.WriteAllText(Path.Combine(ProjectDir, fileName), code);
+    internal static void SaveFile(string source)
+        => File.Copy(source, Path.Combine(ProjectDir, Path.GetFileName(source)), true);
+
+    internal static (int exitCode, string output) ExecuteBackgroundProcess(string app, string args)
+    {
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = app,
+                Arguments = args,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                WorkingDirectory = ProjectDir,
+                CreateNoWindow = true,
+            }
+        };
+        process.Start();
+        process.WaitForExit();
+        return (process.ExitCode, process.StandardOutput.ReadToEnd());
     }
 }
 static class TestExtensions
