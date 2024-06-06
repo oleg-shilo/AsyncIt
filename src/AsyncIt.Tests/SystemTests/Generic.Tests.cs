@@ -12,61 +12,21 @@ public class System_Tests : TestBase
     [Fact]
     public void ShouldIgnorePrivateAndProtectedMethods()
     {
-        CreateProjectFile("test.csproj");
-        SaveFile(asyncAsm);
-        // SaveFile(thisAsm);
+        var folder = new TestFolder("a");
+        folder.Create("test.csproj");
+        folder.Copy(typeof(CodeGenerator).Assembly.Location);
 
-        SaveExtendableCode("OrderService.cs", """
-            using System;
-            using System.Diagnostics;
-            using System.Net;
-            using System.Xml.Linq;
-            using AsyncIt;
+        folder.Create("Program.cs");
+        folder.Create("Models.cs");
+        folder.Create("OrderService.cs");
+        folder.Create("UserService.cs");
 
-            namespace AsyncIt.Tests;
+        folder.ProcessWithAsyncIt("OrderService.cs");
+        folder.ProcessWithAsyncIt("UserService.cs");
 
-            [Async]
-            public partial class OrderService
-            {
-                public Order GetOrder1(int id) => null;
-                internal Order GetOrder2(int id) => null;
-                private Order GetOrder3(int id) => null;
-                protected Order GetOrder4(int id) => null;
-                Order GetOrder5(int id) => null;
-            }
-            """);
-
-        SaveCodeFile("Program.cs", """
-            using System;
-            using AsyncIt.Tests;
-
-
-            partial class Program
-            {
-                static async Task Main()
-                {
-                    OrderService service = new();
-                    var order = await service.GetOrder1Async(1);
-                }
-            }
-            """);
-
-        SaveCodeFile("Order.cs", """
-            using System;
-            using AsyncIt.Tests;
-
-            public class Order
-            {
-                public int Id { get; set; }
-                public string? Name { get; set; }
-                public string? Date { get; set; }
-                public string? Status { get; set; }
-            }
-            """);
-
-        (var exitCode, var output) = ExecuteBackgroundProcess("dotnet.exe", "build");
+        (var exitCode, var output) = folder.ExecuteBackgroundProcess("dotnet.exe", "build");
 
         Assert.Equal(0, exitCode);
-
     }
 }
+

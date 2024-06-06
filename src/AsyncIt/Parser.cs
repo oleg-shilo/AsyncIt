@@ -100,6 +100,7 @@ static class Parser
 
         foreach (var ns in typeMetadata.UsingNamespaces)
             code.AppendLine(ns);
+        code.AppendLine();
 
         (var header, var indent, var footer) = type.GenerateSourceSkeleton();
 

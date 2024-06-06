@@ -10,10 +10,42 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="6.0.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Include="xunit" Version="2.5.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+    <Compile Remove="SystemTests\sources\a\**" />
+    <EmbeddedResource Remove="SystemTests\sources\a\**" />
+    <None Remove="SystemTests\sources\a\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="SystemTests\sources\default\Models.cs" />
+    <Compile Remove="SystemTests\sources\default\Order.cs" />
+    <Compile Remove="SystemTests\sources\default\OrderService.cs" />
+    <Compile Remove="SystemTests\sources\default\Program.cs" />
+    <Compile Remove="SystemTests\sources\default\UserService.cs" />
+    <Compile Remove="SystemTests\sources\Order.cs" />
+    <Compile Remove="SystemTests\sources\OrderService.cs" />
+    <Compile Remove="SystemTests\sources\Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="SystemTests\sources\default\Models.cs" />
+    <None Include="SystemTests\sources\default\Order.cs" />
+    <None Include="SystemTests\sources\default\OrderService.cs" />
+    <None Include="SystemTests\sources\default\Program.cs" />
+    <None Include="SystemTests\sources\default\UserService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageReference Include="System.Runtime" Version="4.3.1" />
+    <PackageReference Include="xunit" Version="2.8.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
   </ItemGroup>
