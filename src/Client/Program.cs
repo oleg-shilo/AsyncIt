@@ -1,11 +1,11 @@
-﻿using System.ComponentModel;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using AsyncIt;
-// 
+
+//
 // [assembly: AsyncExternal(typeof(HttpClient))]
 [assembly: AsyncExternal(typeof(List<int>))]
-
 
 // [assembly: AsyncExternal(typeof(Directory), Interface.Sync)]
 
@@ -20,7 +20,7 @@ static class HttpClientExtensions
         => Task.Run(() => client.GetString(url));
 }
 
-// [AsyncAsm(Class = typeof(HttpClient))] 
+// [AsyncAsm(Class = typeof(HttpClient))]
 partial class Program
 {
     static async Task Main(string[] args)
@@ -47,7 +47,6 @@ partial class Program
 
     static partial void HelloFrom(string name);
 }
-
 
 public class Account
 {
