@@ -10,10 +10,10 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Xml.Linq;
-using AsyncIt;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using AsyncIt;
 
 static class Runtime
 {
@@ -21,6 +21,7 @@ static class Runtime
     {
         NewLine = new StringBuilder().AppendLine().ToString();
     }
+
     public static string NewLine;
 }
 
@@ -58,15 +59,21 @@ public static class ArrayExtensions
 
 static class Extensions
 {
-    public static string Arg(this ImmutableArray<KeyValuePair<string, TypedConstant>> namedArguments, string name)
+    public static string ValueByKey(this ImmutableArray<KeyValuePair<string, TypedConstant>> namedArguments, string name)
         => namedArguments.FirstOrDefault(x => x.Key == name).Value.ToCSharpString();
+
+    public static string ValueByName(this ImmutableArray<TypedConstant> arguments, string name)
+    {
+        var result = arguments.FirstOrDefault(x => x.Type.ToDisplayString() == name);
+        return result.IsNull ? null : result.Value?.ToString();
+    }
 
     public static T EnumParse<T>(this string value)
     {
         // ToCSharpString returns full names (e.g. AsyncIt.Algorithm.Inheritance)
         // or "null" if the value is null
 
-        if (value == "null")
+        if (value == "null" || !value.HasText())
             return default;
         else
             return (T)Enum.Parse(typeof(T), value.Replace($"{typeof(T).FullName}.", ""));
@@ -110,6 +117,7 @@ static class Extensions
             return text.Substring(pattern.Length);
         return text;
     }
+
     public static string DeleteWord(this string text, string word)
         => text.Replace(word, "").Replace("  ", " ").Trim();
 
@@ -124,7 +132,6 @@ static class Extensions
     {
         var attrArguments = targetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncExternalAttribute)).NamedArguments;
         var constrArguments = targetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncExternalAttribute)).ConstructorArguments;
-
 
         if (constrArguments.Length == 0)
         {
@@ -141,6 +148,7 @@ static class Extensions
             return (className, assemblyName, attrValue as ISymbol);
         }
     }
+
     internal static (Algorithm algorithm, Interface @interface) GetAsyncInfo(this ISymbol targetSymbol)
     {
         var attrArguments = targetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncAttribute)).NamedArguments;
@@ -148,25 +156,22 @@ static class Extensions
 
         var attr = new AsyncAttribute();
 
-
         if (constrArguments.Length == 0)
         {
-            var algorithmValue = attrArguments
-                .FirstOrDefault(x => x.Key == nameof(AsyncAttribute.Algorithm)).Value.Value?.ToString().EnumParse<Algorithm>();
-            var interfaceValue = attrArguments
-                .FirstOrDefault(x => x.Key == nameof(AsyncAttribute.Interface)).Value.Value?.ToString().EnumParse<Interface>();
+            var algorithmValue = attrArguments.ValueByKey(nameof(AsyncAttribute.Algorithm)).EnumParse<Algorithm>();
+            var interfaceValue = attrArguments.ValueByKey(nameof(AsyncAttribute.Interface)).EnumParse<Interface>();
 
-            return (algorithmValue ?? default, interfaceValue ?? default);
+            return (algorithmValue, interfaceValue);
         }
         else
         {
-
-            var algorithm = attrArguments.Arg(nameof(Algorithm)).EnumParse<Algorithm>();
-            var @interface = attrArguments.Arg(nameof(Interface)).EnumParse<Interface>();
+            var algorithm = constrArguments.ValueByName(typeof(Algorithm).FullName).EnumParse<Algorithm>();
+            var @interface = constrArguments.ValueByName(typeof(Interface).FullName).EnumParse<Interface>();
 
             return (algorithm, @interface);
         }
     }
+
     internal static string AsyncToSyncReturnType(this string returnType)
         => returnType == "Task"
             ? "void"
@@ -174,6 +179,7 @@ static class Extensions
                   .TrimStart("Task<")
                   .TrimStart("System.Task<")
                   .TrimEnd(">");
+
     internal static (string name, string genericParams) GetNameInfo(this MethodMetadata info)
         => (info.Name, info.GenericParameters.HasText() ? $"<{info.GenericParameters}>" : "");
 
@@ -185,22 +191,26 @@ static class Extensions
 
     public static bool HasAny<T>(this IEnumerable<T> items)
         => items != null && items.Any();
+
     public static bool HasText(this string text)
     {
         return !string.IsNullOrEmpty(text);
     }
+
     public static T To<T>(this object obj)
     {
         return (T)obj;
     }
+
     public static bool OneOf(this string text, params string[] items)
     {
         return items.Any(x => x == text);
     }
+
     public static string IndentLinesBy(this string text, int indentLevel, string linePreffix = "")
     {
         return string.Join(Runtime.NewLine, text.Replace("\r", "")
-                                                    .Split('\n')
+                                                .Split('\n')
                                                     .Select(x => x.IndentBy(indentLevel, linePreffix))
                                                     .ToArray());
     }

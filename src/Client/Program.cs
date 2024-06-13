@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using AsyncIt;
 
 //
@@ -52,6 +53,16 @@ public class Account
 {
     public int Id { get; set; }
     public string? Name { get; set; }
+}
+
+[Async(Algorithm.ExtensionMethods, Interface.Sync)]
+partial class NumberService_EM_Sync
+{
+    public async Task<int> GetNumberAsync(int id)
+    {
+        Task.Delay(500).Wait();
+        return id;
+    }
 }
 
 [Async(Algorithm.ExtensionMethods)]

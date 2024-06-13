@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
@@ -21,7 +22,7 @@ using Microsoft.CodeAnalysis.Text;
 // Reading
 // One of the best about Async:
 //    https://devblogs.microsoft.com/dotnet/configureawait-faq/
-//   
+//
 // Source IncrementalGenerator:
 //    https://andrewlock.net/exploring-dotnet-6-part-9-source-generator-updates-incremental-generators/
 //    https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview
@@ -50,8 +51,8 @@ namespace AsyncIt
                     // Debug.Assert(false);
 
                     (string typeName,
-                    string moduleName,
-                    ISymbol symbol) = cntx.TargetSymbol.GetAsyncExternalInfo();
+                        string moduleName,
+                        ISymbol symbol) = cntx.TargetSymbol.GetAsyncExternalInfo();
                     // var ttt = Reconstructions.GetSymbol(cntx.TargetNode, cntx.SemanticModel);
 
                     var sw = Stopwatch.StartNew();
@@ -67,7 +68,6 @@ namespace AsyncIt
 
                     var asmPath = asmsFiles.FirstOrDefault(x => x.EndsWith(moduleName));
 
-
                     return new Model
                     {
                         // SyntaxNode = cntx.TargetNode as TypeDeclarationSyntax
@@ -79,8 +79,6 @@ namespace AsyncIt
                 try
                 {
                     // Debug.Assert(false);
-
-
                 }
                 catch (Exception ex)
                 {
@@ -88,14 +86,15 @@ namespace AsyncIt
                 }
             });
         }
+
         public void InitializeTypeGenerator(IncrementalGeneratorInitializationContext context)
         {
-
             var pipeline = context.SyntaxProvider.ForAttributeWithMetadataName(typeof(AsyncAttribute).FullName,
                 predicate: (node, cancellation) => node is TypeDeclarationSyntax,
                 transform: (cntx, cancellation) =>
                 {
-                    // Debug.Assert(false);
+                    // if (cntx.TargetSymbol.Name?.Contains("NumberService_EM_Sync") == true)
+                    //     Debug.Assert(false);
 
                     var attr = new AsyncAttribute();
 
@@ -124,7 +123,8 @@ namespace AsyncIt
             {
                 try
                 {
-                    // Debug.Assert(false);
+                    // if (model?.TypeName?.Contains("NumberService_EM_Sync") == true)
+                    //     Debug.Assert(false);
 
                     var result = model.SyntaxNode.GenerateExtraCodeForType(model.Attribute);
                     var file = $"{Path.GetFileNameWithoutExtension(model.FilePath)}.{model?.Namespace ?? "global"}.{model.TypeName}.g.cs";
@@ -137,6 +137,7 @@ namespace AsyncIt
                 }
             });
         }
+
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             // Add the marker attribute as we do not share this assembly for referencing

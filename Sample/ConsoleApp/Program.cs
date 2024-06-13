@@ -65,13 +65,10 @@ namespace ConsoleApp
 
                 Console.WriteLine($"Partial Type (full): {number}-{number2}, \"{name}\"-\"{name2}\"");
             }
-
         }
-
     }
 
-
-    [Async(Algorithm = Algorithm.PartialType, Interface = Interface.Async)]
+    [Async(Algorithm.PartialType, Interface.Async)]
     partial class NumberService_PT_Async
     {
         public int GetNumber(int id)
@@ -81,8 +78,7 @@ namespace ConsoleApp
         }
     }
 
-
-    [Async(Algorithm = Algorithm.PartialType, Interface = Interface.Sync)]
+    [Async(Algorithm.PartialType, Interface.Sync)]
     partial class NumberService_PT_Sync
     {
         public async Task<int> GetNumberAsync(int id)
@@ -92,8 +88,7 @@ namespace ConsoleApp
         }
     }
 
-
-    [Async(Algorithm = Algorithm.ExtensionMethods, Interface = Interface.Async)]
+    [Async(Algorithm.ExtensionMethods, Interface.Async)]
     partial class NumberService_EM_Async
     {
         public int GetNumber(int id)
@@ -103,7 +98,7 @@ namespace ConsoleApp
         }
     }
 
-    [Async(Algorithm = Algorithm.ExtensionMethods, Interface = Interface.Sync)]
+    [Async(Algorithm.ExtensionMethods, Interface.Sync)]
     partial class NumberService_EM_Sync
     {
         public async Task<int> GetNumberAsync(int id)
@@ -113,7 +108,7 @@ namespace ConsoleApp
         }
     }
 
-    [Async(Algorithm = Algorithm.ExtensionMethods, Interface = Interface.Full)]
+    [Async(Algorithm.ExtensionMethods, Interface.Full)]
     partial class NumberService_EM_Full
     {
         public async Task<int> GetNumberAsync(int id)
@@ -129,7 +124,7 @@ namespace ConsoleApp
         }
     }
 
-    [Async(Algorithm = Algorithm.PartialType, Interface = Interface.Full)]
+    [Async(Algorithm.PartialType, Interface.Full)]
     partial class NumberService_PT_Full
     {
         public async Task<int> GetNumberAsync(int id)

@@ -12,7 +12,7 @@
     <PackageIconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</PackageIconUrl>
     <IncludeSymbols>True</IncludeSymbols>-->
     <PackageId>AsyncIt</PackageId>
-    <PackageVersion>1.0.0.0-pre</PackageVersion>
+    <PackageVersion>1.0.0-pre</PackageVersion>
     <Authors>Oleg Shilo</Authors>
     <PackageProjectUrl>https://github.com/oleg-shilo/AsyncIt</PackageProjectUrl>
     <RepositoryUrl>https://github.com/oleg-shilo/AsyncIt</RepositoryUrl>
@@ -34,6 +34,8 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
     <PackageReadmeFile></PackageReadmeFile>
+
+    <PackageOutputPath>$(OutputPath)..\..\output</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -72,5 +74,7 @@
   <ItemGroup>
     <Folder Include="tools\" />
   </ItemGroup>
+
+
 
 </Project>
