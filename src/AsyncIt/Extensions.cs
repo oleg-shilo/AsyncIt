@@ -128,24 +128,29 @@ static class Extensions
     internal static bool IsToken(this object element, SyntaxKind expectedKind)
         => ((SyntaxToken)element).IsKind(expectedKind);
 
-    internal static (string type, string assembly, ISymbol symbol) GetAsyncExternalInfo(this ISymbol targetSymbol)
+    internal static (string assembly, ISymbol symbol) GetAsyncExternalInfo(this ISymbol targetSymbol)
     {
         var attrArguments = targetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncExternalAttribute)).NamedArguments;
         var constrArguments = targetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncExternalAttribute)).ConstructorArguments;
 
         if (constrArguments.Length == 0)
         {
-            object attrValue = attrArguments.FirstOrDefault(x => x.Key == nameof(AsyncExternalAttribute.Type)).Value;
-            var className = ((TypedConstant)attrValue).Value.ToString();
-            var assemblyName = ((ISymbol)((TypedConstant)attrValue).Value).ContainingModule.ToString();
-            return (className, assemblyName, attrValue as ISymbol);
+            var attrValue = attrArguments.FirstOrDefault(x => x.Key == nameof(AsyncExternalAttribute.Type)).Value;
+            if (attrValue.IsNull)
+                return (null, null);
+
+            var assemblyName = ((ISymbol)attrValue.Value).ContainingModule.ToString();
+            return (assemblyName, attrValue.Value as ISymbol);
         }
         else
         {
-            object attrValue = constrArguments.FirstOrDefault().Value;
+            var attrValue = constrArguments.FirstOrDefault().Value;
+            if (attrValue == null)
+                return (null, null);
+
             var className = attrValue.ToString();
             var assemblyName = ((ISymbol)attrValue).ContainingModule.ToString();
-            return (className, assemblyName, attrValue as ISymbol);
+            return (assemblyName, attrValue as ISymbol);
         }
     }
 
@@ -153,8 +158,6 @@ static class Extensions
     {
         var attrArguments = targetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncAttribute)).NamedArguments;
         var constrArguments = targetSymbol.GetAttributes().First(x => x.AttributeClass.Name == nameof(AsyncAttribute)).ConstructorArguments;
-
-        var attr = new AsyncAttribute();
 
         if (constrArguments.Length == 0)
         {
@@ -169,6 +172,40 @@ static class Extensions
             var @interface = constrArguments.ValueByName(typeof(Interface).FullName).EnumParse<Interface>();
 
             return (algorithm, @interface);
+        }
+    }
+
+    internal static string GetParamValue(this AttributeData attrData, string name)
+    {
+        var attrArguments = attrData.NamedArguments;
+        var constrArguments = attrData.ConstructorArguments;
+
+        if (constrArguments.Length == 0)
+        {
+            return attrArguments.ValueByKey(name);
+        }
+        else
+        {
+            return constrArguments.ValueByName(name);
+        }
+    }
+
+    internal static T GetAsyncAttributeInfo<T>(this AttributeData attrData, string name = null)
+    {
+        var attrArguments = attrData.NamedArguments;
+        var constrArguments = attrData.ConstructorArguments;
+
+        if (constrArguments.Length == 0)
+        {
+            var @interface = attrArguments.ValueByKey(name ?? typeof(T).Name).EnumParse<T>();
+
+            return @interface;
+        }
+        else
+        {
+            var @interface = constrArguments.ValueByName(name ?? typeof(T).FullName).EnumParse<T>();
+
+            return @interface;
         }
     }
 

@@ -1,11 +1,18 @@
 ﻿using AsyncIt;
 
+[assembly: AsyncExternal(typeof(HttpClient), Interface.Sync)]
+
 namespace ConsoleApp
 {
     internal class Program
     {
         static async Task Main(string[] args)
         {
+            {
+                HttpClient client = new();
+                client.GetString("https://www.google.com");
+            }
+
             {
                 var svc = new NumberService_EM_Async();
 

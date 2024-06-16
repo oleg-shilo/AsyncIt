@@ -71,7 +71,7 @@ static class Parser
             Interface = asmAttribute.Interface,
         };
 
-        if (asmAttribute.Type.GenericTypeArguments.Any())
+        if (asmAttribute.Type?.GenericTypeArguments?.Any() == true)
             attribute.TypeGenericArgs = $"<{asmAttribute.Type.GenericTypeArguments.Select(x => x.FullName).JoinBy(", ")}>";
 
         GenerateExtensionClass(attribute, code, typeMetadata, typeMetadata.Methods, indent);
@@ -358,8 +358,8 @@ static class Parser
             Modifiers = "public",
             Namespace = namespaceDeclaration.Trim('{', '\n', '\r').Split(' ').Last(),
             Name = rawTypeName,
-            GenericParameters = genericParams,
-            GenericParametersConstraints = typeConstraints
+            GenericParameters = genericParams ?? "",
+            GenericParametersConstraints = typeConstraints ?? ""
         };
 
         typeMetadata.Methods = methodsDeclaration.Trim(' ', '\n', '\r', '{', '}')
@@ -395,8 +395,8 @@ static class Parser
                 {
                     Modifiers = parts[0],
                     ReturnType = parts[1],
-                    GenericParameters = generParam,
-                    GenericParametersConstraints = constrtaints,
+                    GenericParameters = generParam ?? "",
+                    GenericParametersConstraints = constrtaints ?? "",
                     Name = rawName,
                     Parameters = $"({parameters.JoinBy(", ")})",
                     ParametersNames = $"({parameters.Select(y => y.Split(' ').Last()).JoinBy(", ")})"

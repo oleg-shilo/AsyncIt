@@ -42,43 +42,82 @@ namespace AsyncIt
     [Generator]
     public class AsyncExtensionsGenerator : IIncrementalGenerator
     {
+        static List<string> alreadyAddedSources = new List<string>();
+
         public void InitializeAssemblyGenerator(IncrementalGeneratorInitializationContext context)
         {
             var asmPipeline = context.SyntaxProvider.ForAttributeWithMetadataName(typeof(AsyncExternalAttribute).FullName,
                 predicate: (node, cancellation) => true,
                 transform: (cntx, cancellation) =>
                 {
-                    // Debug.Assert(false);
-
-                    (string typeName,
-                        string moduleName,
-                        ISymbol symbol) = cntx.TargetSymbol.GetAsyncExternalInfo();
-                    // var ttt = Reconstructions.GetSymbol(cntx.TargetNode, cntx.SemanticModel);
-
-                    var sw = Stopwatch.StartNew();
-                    var code = Syntaxer.Reconstruct(symbol);
-
-                    var time = sw.Elapsed.ToString();
-
-                    Log.WriteLine($"Reconstruction time: {time}");
-
-                    dynamic model = cntx.SemanticModel;
-                    var refs = model.Compilation.References as IEnumerable<dynamic>;
-                    var asmsFiles = refs.Select(x => x.FilePath).Cast<string>().ToList();
-
-                    var asmPath = asmsFiles.FirstOrDefault(x => x.EndsWith(moduleName));
-
-                    return new Model
+                    try
                     {
-                        // SyntaxNode = cntx.TargetNode as TypeDeclarationSyntax
-                    };
+                        // Debug.Assert(false);
+
+                        (string moduleName, // module name might be needed for extraction of the XML doc from the assembly
+                            ISymbol symbol) = cntx.TargetSymbol.GetAsyncExternalInfo();
+
+                        if (symbol is null)
+                            return null;
+
+                        AttributeData data = cntx.Attributes.FirstOrDefault();
+
+                        // if we try to reconstruct AsyncExternalAttribute.Type then we would need top load its all
+                        // dependencies so using `ISymbol symbol` from the prev call instead
+                        var attr = new AsyncExternalAttribute(null);
+                        attr.Interface = data.GetAsyncAttributeInfo<Interface>();
+                        attr.IncludePattern = data.GetParamValue(nameof(AsyncExternalAttribute.IncludePattern)) ?? attr.IncludePattern;
+
+                        Log.WriteLine($"External: {attr.Interface}");
+
+                        // To be used later for extracting the XML doc
+
+                        // dynamic model = cntx.SemanticModel;
+                        // var refs = model.Compilation.References as IEnumerable<dynamic>;
+                        // var asmsFiles = refs.Select(x => x.FilePath).Cast<string>().ToList();
+                        // var asmPath = asmsFiles.FirstOrDefault(x => x.EndsWith(moduleName));
+
+                        return new ExternalModel
+                        {
+                            Attribute = attr,
+                            TypeName = symbol.ToString(),
+                            FilePath = cntx.TargetNode.SyntaxTree.FilePath,
+                            TypeSymbol = symbol
+                        };
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.WriteLine(ex.ToString());
+                        return null;
+                    }
                 });
 
             context.RegisterSourceOutput(asmPipeline, (cntx, model) =>
             {
+                if (model == null)
+                    return;
+
                 try
                 {
                     // Debug.Assert(false);
+
+                    string externalTypeDefinition = model.TypeSymbol.Reconstruct();
+
+                    var newCode = externalTypeDefinition.GenerateExtraCodeForExternalType(model.Attribute);
+
+                    var fileId = $"{Path.GetFileNameWithoutExtension(model.FilePath)}-{model.TypeName}";
+                    var count = alreadyAddedSources.Count(x => x.StartsWith(fileId));
+
+                    var file = $"{fileId}.g.cs";
+                    if (count > 0)
+                        file = $"{fileId}.{++count}.g.cs";
+
+                    var source = SourceText.From(newCode, Encoding.UTF8);
+                    cntx.AddSource(file, source);
+
+                    alreadyAddedSources.Add(file);
+
+                    Log.WriteLine($"External: ouptut {file}");
                 }
                 catch (Exception ex)
                 {
@@ -100,10 +139,10 @@ namespace AsyncIt
 
                     (attr.Algorithm, attr.Interface) = cntx.TargetSymbol.GetAsyncInfo();
 
-                    Log.WriteLine($"{attr.Algorithm}, {attr.Interface}");
+                    Log.WriteLine($"Local: {attr.Algorithm}, {attr.Interface}");
                     try
                     {
-                        return new Model
+                        return new LocalModel
                         {
                             Namespace = cntx.TargetSymbol.ContainingNamespace?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)),
                             Attribute = attr,
@@ -154,11 +193,11 @@ class Log
 {
     public static void WriteLine(string message)
     {
-        if (message.Contains("not set"))
-            Debug.Assert(false);
+        // if (message.Contains("not set"))
+        //     Debug.Assert(false);
 
         message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => $"async-me> {x}")
+            .Select(x => $"asyncit> {x}")
             .ToList()
             .ForEach(x => Debug.WriteLine(x));
     }

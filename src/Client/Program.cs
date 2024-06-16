@@ -5,23 +5,24 @@ using System.Threading.Tasks;
 using AsyncIt;
 
 //
-// [assembly: AsyncExternal(typeof(HttpClient))]
-[assembly: AsyncExternal(typeof(List<int>))]
+[assembly: AsyncExternal(Type = typeof(HttpClient), Interface = Interface.Sync)]
+// [assembly: AsyncExternal(typeof(HttpClient), Interface.Sync, "")]
+// [assembly: AsyncExternal(typeof(List<int>))]
 
 // [assembly: AsyncExternal(typeof(Directory), Interface.Sync)]
 
 namespace ConsoleApp;
 
-static class HttpClientExtensions
-{
-    public static string GetString(this HttpClient client, string url)
-        => client.GetStringAsync(url).Result;
+// static class HttpClientExtensions
+// {
+//     public static string GetString(this HttpClient client, string url)
+//         => client.GetStringAsync(url).Result;
 
-    public static Task<string> GetStringConcurrent(this HttpClient client, string url)
-        => Task.Run(() => client.GetString(url));
-}
+//     public static Task<string> GetStringConcurrent(this HttpClient client, string url)
+//         => Task.Run(() => client.GetString(url));
+// }
 
-// [AsyncAsm(Class = typeof(HttpClient))]
+// // [AsyncAsm(Class = typeof(HttpClient))]
 partial class Program
 {
     static async Task Main(string[] args)
@@ -30,13 +31,14 @@ partial class Program
 
         HttpClient client = new();
         client.GetStringAsync("https://www.google.com").Wait();
+        var ttt2 = client.GetString("https://www.google.com");
 
         // OrderService service = new();
         // var order = await service.GetOrderAsync(1);
         Console.WriteLine("starting");
 
         var svc = new AccountService();
-        var result = await svc.GetAccountAsync(1);
+        // var result = await svc.GetAccountAsync(1);
         Console.WriteLine("ending");
 
         // var svc1 = new AccountService1();
@@ -55,7 +57,7 @@ public class Account
     public string? Name { get; set; }
 }
 
-[Async(Algorithm.ExtensionMethods, Interface.Sync)]
+// [Async(Algorithm.ExtensionMethods, Interface.Sync)]
 partial class NumberService_EM_Sync
 {
     public async Task<int> GetNumberAsync(int id)
@@ -65,7 +67,7 @@ partial class NumberService_EM_Sync
     }
 }
 
-[Async(Algorithm.ExtensionMethods)]
+// [Async(Algorithm.ExtensionMethods)]
 partial class AccountService
 {
     public Account GetAccount(int id)
@@ -79,7 +81,7 @@ partial class AccountService
     }
 }
 
-[Async(Algorithm.ExtensionMethods, Interface.Sync)]
+// [Async(Algorithm.ExtensionMethods, Interface.Sync)]
 partial class AccountService2
 {
     public async Task<Account> GetAccountAsync(int id)

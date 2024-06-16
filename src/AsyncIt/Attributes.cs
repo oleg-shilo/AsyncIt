@@ -23,7 +23,6 @@ namespace AsyncIt
             Algorithm = algorithm;
             Interface = @interface;
         }
-
         public AsyncAttribute(Algorithm algorithm)
         {
             Algorithm = algorithm;
@@ -41,6 +40,9 @@ namespace AsyncIt
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
     public sealed class AsyncExternalAttribute : Attribute
     {
+        public AsyncExternalAttribute()
+        {
+        }
         public AsyncExternalAttribute(Type type)
         {
             Type = type;
@@ -51,9 +53,16 @@ namespace AsyncIt
             Type = type;
             Interface = @interface;
         }
+        public AsyncExternalAttribute(Type type, Interface @interface, string includePattern)
+        {
+            Type = type;
+            Interface = @interface;
+            IncludePattern = includePattern;
+        }
 
         public Interface Interface { get; set; }
         public Type Type { get; set; }
+        public string IncludePattern { get; set; } = "*";
     }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]

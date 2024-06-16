@@ -1,16 +1,16 @@
 using System;
 using System.Diagnostics;
-using System.Net.Http.Headers;
 using System.Net;
+using System.Net.Http.Headers;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Reflection.Emit;
 
 namespace AsyncIt.Tests;
 
@@ -40,6 +40,7 @@ static class TestExtensions
 {
     public static ISymbol SymbolAt(this Document doc, int pos)
         => SymbolFinder.FindSymbolAtPositionAsync(doc, pos).Result;
+
     public static string GetTypeInfo(this string type)
     {
         if (type == "HttpClient")
@@ -69,10 +70,11 @@ static class TestExtensions
                 typeof(Directory).Assembly.Location]);
 
         ISymbol symbol = doc.SymbolAt(code.IndexOf(type) + 3);
-        var directoryCode = symbol?.Reconstruct();
+        var reconstructedCode = symbol?.Reconstruct();
 
-        return directoryCode;
+        return reconstructedCode;
     }
+
     public static Document ToCompiledDoc(this string code, params string[] refs)
     {
         var workspace = new AdhocWorkspace();
@@ -240,7 +242,6 @@ static class TestExtensions
             """;
 }
 
-
 class TestFolder
 {
     string name;
@@ -254,13 +255,13 @@ class TestFolder
         {
             File.Delete(item);
         }
-
     }
 
     internal static string thisAsm = Assembly.GetExecutingAssembly().Location;
     internal static string asyncAsm = typeof(CodeGenerator).Assembly.Location;
     internal string SourcesDir => Path.Combine(ProjectDir, "..", "..", "..", "..", "..", "SystemTests", "sources", sourceName);
     internal string projectDir = null;
+
     internal string ProjectDir
     {
         get
@@ -273,6 +274,7 @@ class TestFolder
             return projectDir;
         }
     }
+
     public void Copy(string source)
         => File.Copy(source, Path.Combine(ProjectDir, Path.GetFileName(source)), true);
 

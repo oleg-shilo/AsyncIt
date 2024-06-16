@@ -8,7 +8,6 @@ using Microsoft.CodeAnalysis.CSharp;
 
 static class CodeGenerator
 {
-
     internal static bool SuppressXmlDocGeneration = false; // for controlling XML generation during testing
 
     public static string GenerateXmlDoc(string context, MethodMetadata method, TypeMetadata type, bool force = false)
@@ -97,6 +96,7 @@ static class CodeGenerator
             $"{methodVisibility} static {returnType} {methodName}{methodGenericParameters}{methodParameters}{methodGenericParametersConstraints}\n" +
             $"    => Task.Run(() => instance.{methodInfo.Name}{methodInfo.GenericParameters}{methodInfo.ParametersNames});";
     }
+
     public static string GenerateSyncExtensionMethod(this MethodMetadata methodInfo, TypeMetadata typeInfo)
     {
         var baseType = $"{typeInfo.Name}{typeInfo.GenericParameters}";
@@ -125,9 +125,8 @@ static class CodeGenerator
         var paramsItems = typeInfo.GenericParameters?.Trim('<', '>').Split(',').Select(x => x.Trim()) ?? new string[0];
         var paramsItems2 = methodInfo.GenericParameters?.Trim('<', '>').Split(',').Select(x => x.Trim()) ?? new string[0];
 
-
         // "type<T1, T3> + method<T1, T2>" => "<T1, T2, T3>"
-        var methodGenericParameters = $"<{paramsItems.Concat(paramsItems2).Distinct().OrderBy(x => x).JoinBy(", ")}>";
+        var methodGenericParameters = $"<{paramsItems.Concat(paramsItems2).Where(x => x.HasText()).Distinct().OrderBy(x => x).JoinBy(", ")}>";
 
         var methodGenericParametersConstraints = "";
         if (typeInfo.GenericParametersConstraints.HasText())
@@ -138,6 +137,7 @@ static class CodeGenerator
 
         return (methodGenericParameters, methodGenericParametersConstraints);
     }
+
     static string GetExtensionMethodVisibility(TypeMetadata typeMetadata)
     {
         // The type of arg in `Method( this Type arg,...` must be the same visibility as the type in typeMetadata

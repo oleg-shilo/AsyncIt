@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using AsyncIt;
 
-class Model
+class LocalModel
 {
     public string Namespace = "";
     public AsyncAttribute Attribute;
@@ -23,10 +23,19 @@ class Model
     public TypeDeclarationSyntax SyntaxNode;
 }
 
+class ExternalModel
+{
+    public AsyncExternalAttribute Attribute;
+    public string TypeName = "";
+    public string FilePath = "";
+    public ISymbol TypeSymbol;
+}
+
 class TypeMetadata
 {
     // public string Namespace;
     public string[] UsingNamespaces = new string[0];
+
     public string[] Attributes = new string[0];
     public string Modifiers = "";                           // public, static, sealed etc
     public string Namespace = "";
