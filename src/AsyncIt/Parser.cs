@@ -69,6 +69,7 @@ static class Parser
         var attribute = new AsyncAttribute
         {
             Interface = asmAttribute.Interface,
+            NamePattern = asmAttribute.Methods
         };
 
         if (asmAttribute.Type?.GenericTypeArguments?.Any() == true)
@@ -127,12 +128,15 @@ static class Parser
     {
         // typeMetadata.GenericParameters = attribute.TypeGenericArgs;
 
-        code.AppendLine($"{indent}public static class {typeMetadata.Name}Extensions".TrimEnd())
+        code.AppendLine($"{indent}public static partial class {typeMetadata.Name}Extensions".TrimEnd())
                         .AppendLine($"{indent}{{");
 
         var methodsCode = new StringBuilder();
         foreach (MethodMetadata item in methodsMetadata)
         {
+            if (!item.IsMatching(attribute.NamePattern))
+                continue;
+
             var methodImplementation = "";
             switch (attribute.Interface)
             {
@@ -153,6 +157,8 @@ static class Parser
 
             if (methodImplementation.Any())
             {
+                // Log.WriteLine($"     {item.Name}{item.Parameters}");
+
                 foreach (var line in methodImplementation.Split('\n'))
                     methodsCode.AppendLine($"{indent}{singleIndent}{line}");
 

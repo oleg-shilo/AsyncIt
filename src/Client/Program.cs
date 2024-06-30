@@ -5,7 +5,16 @@ using System.Threading.Tasks;
 using AsyncIt;
 
 //
-[assembly: AsyncExternal(Type = typeof(HttpClient), Interface = Interface.Sync)]
+[assembly: AsyncExternal(typeof(HttpClient), Interface.Sync,
+    $"{nameof(HttpClient.GetStringAsync)}, " +
+    $"{nameof(HttpClient.GetStreamAsync)}, " +
+    $"{nameof(HttpClient.GetStringAsync)}, " +
+    $"{nameof(HttpClient.GetByteArrayAsync)}")]
+
+// [assembly: AsyncExternal(typeof(HttpClient), Interface.Sync, "GetStringAsync")]
+// [assembly: AsyncExternal(Type = typeof(HttpClient), Interface = Interface.Sync, Methods = "GetStringAsync")]
+// [assembly: AsyncExternal(Type = typeof(HttpClient), Interface = Interface.Sync, Methods = "GetByteArrayAsync,GetStreamAsync")]
+
 // [assembly: AsyncExternal(typeof(HttpClient), Interface.Sync, "")]
 // [assembly: AsyncExternal(typeof(List<int>))]
 

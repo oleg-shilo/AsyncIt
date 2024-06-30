@@ -35,6 +35,7 @@ namespace AsyncIt
         public Algorithm Algorithm { get; set; }
         public Interface Interface { get; set; }
         internal string TypeGenericArgs;
+        internal string NamePattern;
     }
 
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
@@ -53,16 +54,16 @@ namespace AsyncIt
             Type = type;
             Interface = @interface;
         }
-        public AsyncExternalAttribute(Type type, Interface @interface, string includePattern)
+        public AsyncExternalAttribute(Type type, Interface @interface, string methods)
         {
             Type = type;
             Interface = @interface;
-            IncludePattern = includePattern;
+            Methods = methods;
         }
 
         public Interface Interface { get; set; }
         public Type Type { get; set; }
-        public string IncludePattern { get; set; } = "*";
+        public string Methods { get; set; } = "*";
     }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]

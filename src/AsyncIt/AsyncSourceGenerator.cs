@@ -27,23 +27,11 @@ using Microsoft.CodeAnalysis.Text;
 //    https://andrewlock.net/exploring-dotnet-6-part-9-source-generator-updates-incremental-generators/
 //    https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview
 
-// TODO:
-// [x] Async.Local.PartialClass
-// [x] Sync.Local.PartialClass
-// [x] Async.Local.ExtensionClass
-// [x] Sync.Local.ExtensionClass
-// [ ] Async.External.ExtensionClass
-// [ ] Sync.External.ExtensionClass
-
-// need to migrate to IIncrementalGenerator
-
 namespace AsyncIt
 {
     [Generator]
     public class AsyncExtensionsGenerator : IIncrementalGenerator
     {
-        static List<string> alreadyAddedSources = new List<string>();
-
         public void InitializeAssemblyGenerator(IncrementalGeneratorInitializationContext context)
         {
             var asmPipeline = context.SyntaxProvider.ForAttributeWithMetadataName(typeof(AsyncExternalAttribute).FullName,
@@ -60,30 +48,46 @@ namespace AsyncIt
                         if (symbol is null)
                             return null;
 
-                        AttributeData data = cntx.Attributes.FirstOrDefault();
+                        var models = new List<ExternalModel>();
 
-                        // if we try to reconstruct AsyncExternalAttribute.Type then we would need top load its all
-                        // dependencies so using `ISymbol symbol` from the prev call instead
-                        var attr = new AsyncExternalAttribute(null);
-                        attr.Interface = data.GetAsyncAttributeInfo<Interface>();
-                        attr.IncludePattern = data.GetParamValue(nameof(AsyncExternalAttribute.IncludePattern)) ?? attr.IncludePattern;
-
-                        Log.WriteLine($"External: {attr.Interface}");
-
-                        // To be used later for extracting the XML doc
-
-                        // dynamic model = cntx.SemanticModel;
-                        // var refs = model.Compilation.References as IEnumerable<dynamic>;
-                        // var asmsFiles = refs.Select(x => x.FilePath).Cast<string>().ToList();
-                        // var asmPath = asmsFiles.FirstOrDefault(x => x.EndsWith(moduleName));
-
-                        return new ExternalModel
+                        foreach (AttributeData data in cntx.Attributes)
                         {
-                            Attribute = attr,
-                            TypeName = symbol.ToString(),
-                            FilePath = cntx.TargetNode.SyntaxTree.FilePath,
-                            TypeSymbol = symbol
-                        };
+                            // if we try to reconstruct AsyncExternalAttribute.Type then we would need top load its all
+                            // dependencies so using `ISymbol symbol` from the prev call instead
+
+                            var attr = new AsyncExternalAttribute(null);
+
+                            string argValue = (data.GetAttributeNamedArgValue("Interface") ??
+                                               data.GetAttributeNamedArgValue(typeof(Interface).FullName))
+                                               ?? attr.Interface.ToString();
+
+                            attr.Interface = argValue.EnumParse<Interface>();
+
+                            argValue = (data.GetAttributeNamedArgValue(nameof(AsyncExternalAttribute.Methods)) ??
+                                        data.GetAttributeNamedArgValue("".GetType().FullName))?.Trim('"')
+                                        ?? attr.Methods;
+
+                            attr.Methods = argValue;
+
+                            Log.WriteLine($"External: {attr.Interface}, {attr.Methods}");
+
+                            // To be used later for extracting the XML doc
+
+                            // dynamic model = cntx.SemanticModel;
+                            // var refs = model.Compilation.References as IEnumerable<dynamic>;
+                            // var asmsFiles = refs.Select(x => x.FilePath).Cast<string>().ToList();
+                            // var asmPath = asmsFiles.FirstOrDefault(x => x.EndsWith(moduleName));
+
+                            models.Add(new ExternalModel
+                            {
+                                Attribute = attr,
+                                TypeName = symbol.ToString(),
+                                FilePath = cntx.TargetNode.SyntaxTree.FilePath,
+                                TypeSymbol = symbol
+                            });
+                        }
+
+                        return models;
                     }
                     catch (Exception ex)
                     {
@@ -92,32 +96,40 @@ namespace AsyncIt
                     }
                 });
 
-            context.RegisterSourceOutput(asmPipeline, (cntx, model) =>
+            context.RegisterSourceOutput(asmPipeline, (cntx, models) =>
             {
-                if (model == null)
+                if (models == null)
                     return;
 
                 try
                 {
+                    // AsyncExternalAttribute is the only attribute that can be applied multiple times
+                    // So it is expected that we may have to process the same type more than once.
+                    // Thus the output files need to be named properly to avoid file name duplications.
+                    var alreadyAddedSources = new List<string>();
+
                     // Debug.Assert(false);
 
-                    string externalTypeDefinition = model.TypeSymbol.Reconstruct();
+                    foreach (var model in models)
+                    {
+                        string externalTypeDefinition = model.TypeSymbol.Reconstruct();
 
-                    var newCode = externalTypeDefinition.GenerateExtraCodeForExternalType(model.Attribute);
+                        var newCode = externalTypeDefinition.GenerateExtraCodeForExternalType(model.Attribute);
 
-                    var fileId = $"{Path.GetFileNameWithoutExtension(model.FilePath)}-{model.TypeName}";
-                    var count = alreadyAddedSources.Count(x => x.StartsWith(fileId));
+                        var fileId = $"{Path.GetFileNameWithoutExtension(model.FilePath)}-{model.TypeName}";
+                        var count = alreadyAddedSources.Count(x => x.StartsWith(fileId));
 
-                    var file = $"{fileId}.g.cs";
-                    if (count > 0)
-                        file = $"{fileId}.{++count}.g.cs";
+                        var file = $"{fileId}.g.cs";
+                        if (count > 0)
+                            file = $"{fileId}.{++count}.g.cs";
 
-                    var source = SourceText.From(newCode, Encoding.UTF8);
-                    cntx.AddSource(file, source);
+                        var source = SourceText.From(newCode, Encoding.UTF8);
+                        cntx.AddSource(file, source);
 
-                    alreadyAddedSources.Add(file);
+                        alreadyAddedSources.Add(file);
 
-                    Log.WriteLine($"External: ouptut {file}");
+                        Log.WriteLine($"External: ouptut {file}");
+                    }
                 }
                 catch (Exception ex)
                 {

@@ -10,7 +10,7 @@ namespace ConsoleApp
         {
             {
                 HttpClient client = new();
-                client.GetString("https://www.google.com");
+                var ttt = client.GetString("https://www.google.com");
             }
 
             {

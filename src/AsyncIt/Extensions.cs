@@ -64,7 +64,15 @@ static class Extensions
 
     public static string ValueByName(this ImmutableArray<TypedConstant> arguments, string name)
     {
-        var result = arguments.FirstOrDefault(x => x.Type.ToDisplayString() == name);
+        // var args = arguments.Select(x => new
+        // {
+        //     typeDisplayName = x.Type.ToDisplayString(),
+        //     typeName = x.Type.Name,
+        //     typeFullName = x.Type.GetFullName()
+        // }).ToArray();
+
+        var result = arguments.FirstOrDefault(x => x.Type.ToDisplayString() == name || x.Type.GetFullName() == name);
+
         return result.IsNull ? null : result.Value?.ToString();
     }
 
@@ -190,22 +198,29 @@ static class Extensions
         }
     }
 
-    internal static T GetAsyncAttributeInfo<T>(this AttributeData attrData, string name = null)
+    // internal static T GetAttributeNamedArg<T>(this AttributeData attrData, string name = null)
+    // {
+    //     var attrValue = attrData.GetAttributeNamedArgValue(name ?? typeof(T).FullName);
+    //     if (typeof(T).IsEnum)
+    //     {
+    //         return attrValue.EnumParse<T>();
+    //     }
+
+    //     return default(T);
+    // }
+
+    internal static string GetAttributeNamedArgValue(this AttributeData attrData, string name = null)
     {
         var attrArguments = attrData.NamedArguments;
         var constrArguments = attrData.ConstructorArguments;
 
         if (constrArguments.Length == 0)
         {
-            var @interface = attrArguments.ValueByKey(name ?? typeof(T).Name).EnumParse<T>();
-
-            return @interface;
+            return attrArguments.ValueByKey(name);
         }
         else
         {
-            var @interface = constrArguments.ValueByName(name ?? typeof(T).FullName).EnumParse<T>();
-
-            return @interface;
+            return constrArguments.ValueByName(name);
         }
     }
 
@@ -219,6 +234,19 @@ static class Extensions
 
     internal static (string name, string genericParams) GetNameInfo(this MethodMetadata info)
         => (info.Name, info.GenericParameters.HasText() ? $"<{info.GenericParameters}>" : "");
+
+    internal static bool IsMatching(this MethodMetadata info, string pattern)
+    {
+        if (pattern == "*")
+            return true;
+
+        foreach (var item in pattern.Split(',').Select(x => x.Trim()).Distinct().Where(x => x.HasText()))
+        {
+            if (info.Name == item)
+                return true;
+        }
+        return false;
+    }
 
     internal static bool IsAsync(this MethodMetadata info)
         => info.ReturnType == "Task"
