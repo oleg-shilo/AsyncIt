@@ -29,7 +29,7 @@ public class ExternalTypes_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class HttpClientTestExtensions
+                public static partial class HttpClientTestExtensions
                 {
                     public static HttpResponseMessage Delete(this HttpClientTest instance, string? requestUri, List<string>? items)
                         => instance.DeleteAsync(requestUri, items).Result;
@@ -57,7 +57,7 @@ public class ExternalTypes_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class GenericClassTestExtensions
+                public static partial class GenericClassTestExtensions
                 {
                     public static Task PostAsync<T1, T2>(this GenericClassTest instance, T1 arg1)
                         => Task.Run(() => instance.Post<T1, T2>(arg1));
@@ -87,7 +87,7 @@ public class ExternalTypes_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class GenericClassTestExtensions
+                public static partial class GenericClassTestExtensions
                 {
                     public static T1 Send<T1, T2>(this GenericClassTest instance, T1 arg1, T2 arg2) where T1: class, new()
                         => instance.SendAsync<T1, T2>(arg1, arg2).Result;
@@ -115,7 +115,7 @@ public class ExternalTypes_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class MixedGenericClassTestExtensions
+                public static partial class MixedGenericClassTestExtensions
                 {
                     public static Task PostAsync<T1, T2, T3, T4>(this MixedGenericClassTest<T1, T2> instance, T1 arg1, T2 arg2, T3 arg3, T4 arg4) where T1: class, new()
                         => Task.Run(() => instance.Post<T3, T4>(arg1, arg2, arg3, arg4));
@@ -142,7 +142,7 @@ public class ExternalTypes_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class MixedGenericClassTestExtensions
+                public static partial class MixedGenericClassTestExtensions
                 {
                     public static T4 Send<T1, T2, T3, T4>(this MixedGenericClassTest<T1, T2> instance, T1 arg1, T2 arg2, T3 arg3) where T1: class, new() where T4: new()
                         => instance.SendAsync<T3, T4>(arg1, arg2, arg3).Result;
@@ -170,7 +170,7 @@ public class ExternalTypes_Tests : TestBase
 
             namespace System.IO
             {
-                public static class DirectoryExtensions
+                public static partial class DirectoryExtensions
                 {
                     public static Task<DirectoryInfo> CreateDirectoryAsync(this Directory instance, string path)
                         => Task.Run(() => instance.CreateDirectory(path));
@@ -205,7 +205,7 @@ public class ExternalTypes_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class SimpleClassTestExtensions
+                public static partial class SimpleClassTestExtensions
                 {
                     public static void Post1(this SimpleClassTest instance, string arg1)
                         => instance.Post1Async(arg1).Wait();
@@ -241,7 +241,7 @@ public class ExternalTypes_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class SimpleClassTestExtensions
+                public static partial class SimpleClassTestExtensions
                 {
                     public static Task Post1Async(this SimpleClassTest instance, string arg1)
                         => Task.Run(() => instance.Post1(arg1));
@@ -277,7 +277,7 @@ public class ExternalTypes_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class SimpleClassTestExtensions
+                public static partial class SimpleClassTestExtensions
                 {
                     public static Task Post1Async(this SimpleClassTest instance, string arg1)
                         => Task.Run(() => instance.Post1(arg1));

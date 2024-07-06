@@ -37,7 +37,7 @@ public class LocalTypes_Sync_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class OrderServiceExtensions
+                public static partial class OrderServiceExtensions
                 {
                     public static Order GetOrder(this OrderService instance, int id)
                         => instance.GetOrderAsync(id).Result;
@@ -86,7 +86,7 @@ public class LocalTypes_Sync_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class OrderServiceExtensions
+                public static partial class OrderServiceExtensions
                 {
                     public static Order GetOrderSync(this OrderService instance, int id)
                         => instance.GetOrder(id).Result;
@@ -138,7 +138,7 @@ public class LocalTypes_Sync_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class OrderServiceExtensions
+                public static partial class OrderServiceExtensions
                 {
                     public static Order GetOrder(this OrderService instance, int id)
                         => instance.GetOrderAsync(id).Result;
@@ -195,7 +195,7 @@ public class LocalTypes_Sync_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class OrderServiceExtensions
+                public static partial class OrderServiceExtensions
                 {
                     internal static List<T> GetOrderSync<T, T1, T2>(this OrderService<T1, T2> instance, Dictionary<string, Nullable<int>> id, string name) where T1: class, new() where T: class, new()
                         => instance.GetOrder<T, T2>(id, name).Result;
@@ -246,7 +246,7 @@ public class LocalTypes_Sync_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class OrderServiceExtensions
+                public static partial class OrderServiceExtensions
                 {
                     public static void GetOrder(this OrderService instance, int id)
                         => instance.GetOrderAsync(id).Wait();

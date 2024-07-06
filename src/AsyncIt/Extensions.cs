@@ -237,7 +237,7 @@ static class Extensions
 
     internal static bool IsMatching(this MethodMetadata info, string pattern)
     {
-        if (pattern == "*")
+        if (pattern == "*" || pattern == null)
             return true;
 
         foreach (var item in pattern.Split(',').Select(x => x.Trim()).Distinct().Where(x => x.HasText()))

@@ -85,7 +85,7 @@ public class LocalTypes_FullInterface_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class OrderServiceExtensions
+                public static partial class OrderServiceExtensions
                 {
                     public static Order GetOrderSync(this OrderService instance, int id)
                         => instance.GetOrder(id).Result;
@@ -189,7 +189,7 @@ public class LocalTypes_FullInterface_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class OrderServiceExtensions
+                public static partial class OrderServiceExtensions
                 {
                     public static Order GetOrder(this OrderService instance, int id)
                         => instance.GetOrderAsync(id).Result;

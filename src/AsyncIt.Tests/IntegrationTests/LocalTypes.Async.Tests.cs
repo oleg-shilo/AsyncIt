@@ -268,7 +268,7 @@ public class LocalTypes_Async_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class OrderServiceExtensions
+                public static partial class OrderServiceExtensions
                 {
                     public static Task<Order> GetOrderAsync(this OrderService instance, int id)
                         => Task.Run(() => instance.GetOrder(id));
@@ -315,7 +315,7 @@ public class LocalTypes_Async_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class OrderServiceExtensions
+                public static partial class OrderServiceExtensions
                 {
                     internal static Task<Order> GetOrderAsync(this OrderService instance, int id)
                         => Task.Run(() => instance.GetOrder(id));
@@ -361,7 +361,7 @@ public class LocalTypes_Async_Tests : TestBase
 
             namespace AsyncIt.Tests
             {
-                public static class OrderServiceExtensions
+                public static partial class OrderServiceExtensions
                 {
                     internal static Task<Order> GetOrderAsync(this OrderService instance, int id)
                         => Task.Run(() => instance.GetOrder(id));

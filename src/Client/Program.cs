@@ -4,34 +4,27 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using AsyncIt;
 
-//
-[assembly: AsyncExternal(typeof(HttpClient), Interface.Sync,
-    $"{nameof(HttpClient.GetStringAsync)}, " +
-    $"{nameof(HttpClient.GetStreamAsync)}, " +
-    $"{nameof(HttpClient.GetStringAsync)}, " +
-    $"{nameof(HttpClient.GetByteArrayAsync)}")]
+// generating sync equivalent for all async methods found in a type
+[assembly: AsyncExternal(typeof(HttpClient), Interface.Sync)]
 
-// [assembly: AsyncExternal(typeof(HttpClient), Interface.Sync, "GetStringAsync")]
-// [assembly: AsyncExternal(Type = typeof(HttpClient), Interface = Interface.Sync, Methods = "GetStringAsync")]
+// generating sync methods for multiple async methods matching the specified names
 // [assembly: AsyncExternal(Type = typeof(HttpClient), Interface = Interface.Sync, Methods = "GetByteArrayAsync,GetStreamAsync")]
 
-// [assembly: AsyncExternal(typeof(HttpClient), Interface.Sync, "")]
-// [assembly: AsyncExternal(typeof(List<int>))]
+// generating sync methods for multiple specific methods; Using nameof() to avoid typos.
+// [assembly: AsyncExternal(typeof(HttpClient), Interface.Sync,
+//     $"{nameof(HttpClient.GetStringAsync)}, " +
+//     $"{nameof(HttpClient.GetStreamAsync)}, " +
+//     $"{nameof(HttpClient.GetStringAsync)}, " +
+//     $"{nameof(HttpClient.GetByteArrayAsync)}")]
 
-// [assembly: AsyncExternal(typeof(Directory), Interface.Sync)]
+// generating sync methods for a single specific method
+// [assembly: AsyncExternal(typeof(HttpClient), Interface.Sync, "GetStringAsync")]
+
+// generating sync methods for a single specific method (alternative attribute syntax)
+// [assembly: AsyncExternal(Type = typeof(HttpClient), Interface = Interface.Sync, Methods = "GetStringAsync")]
 
 namespace ConsoleApp;
 
-// static class HttpClientExtensions
-// {
-//     public static string GetString(this HttpClient client, string url)
-//         => client.GetStringAsync(url).Result;
-
-//     public static Task<string> GetStringConcurrent(this HttpClient client, string url)
-//         => Task.Run(() => client.GetString(url));
-// }
-
-// // [AsyncAsm(Class = typeof(HttpClient))]
 partial class Program
 {
     static async Task Main(string[] args)
