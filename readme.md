@@ -1,16 +1,16 @@
 # AsyncIt
 
-AsyncIt is a NuGet package library that allows automatic generation of additional synchronous and asynchronous APIs for existing user codebase and external packages.
+AsyncIt is a NuGet package library that allows the automatic generation of additional synchronous and asynchronous APIs for existing user codebase and external packages.
 
-It aims to extend user-defined CLR types by automating otherwise manual process of defining repetitive and straightforward routines. Thus the development, maintenance and the consumption of the released API are simplified due to the balanced (close to ideal) ratio of the synchronous and asynchronous API endpoints:
+It aims to extend user-defined CLR types by automating the otherwise manual process of defining repetitive and straightforward routines. Thus, the development, maintenance and consumption of the released API are simplified due to the balanced (close to ideal) ratio of the synchronous and asynchronous API endpoints:
 
 &nbsp;&nbsp;&nbsp;_**Every functionality point has both Async and Sync API endpoints available.**_
 
-This content is an extract of the project's main [Wiki page](https://github.com/oleg-shilo/AsyncIt/wiki). It is highly recommended that you read it as it explains the deep reasons behind this project as well as details of the more concrete usage scenarios.
+This content is an extract from the project's main [Wiki page](https://github.com/oleg-shilo/AsyncIt/wiki). It is highly recommended that you read it, as it explains the deep reasons behind this project and details the more concrete usage scenarios.
 
 ## Overview
 
-AsyncIt is a source generator that is integrated into the .NET build process as a special tool type: so-called "Analyzer". It is invoked by the compiler during the build of the assembly and allows injection of missing API endpoints based on the present assembly API. Thus if the assembly being built has `GetStatus` but not `GetStatusAsync` method then AsyncIt will generate the missing method with a straightforward implementation. It can also generate the synchronous API if it is not present in the original codebase:
+AsyncIt is a source generator that is integrated into the .NET build process as a special tool type - the so-called "Analyzer". It is invoked by the compiler during the assembly build and allows the injection of missing API endpoints based on the present assembly API. Thus, if the assembly being built has the `GetStatus` but not the `GetStatusAsync` method, then AsyncIt will generate the missing method with a straightforward implementation. It can also generate the synchronous API if it is not present in the original codebase:
 
 - The API defines synchronous methods only:
 
@@ -38,9 +38,9 @@ AsyncIt is a source generator that is integrated into the .NET build process as 
   }
   ```
 
-AsyncIt does not do anything fancy. Similar to the `await` keyword, it cannot magically convert a synchronous routine into an asynchronous one and vice versa. It simply emits the code that the developer would type manually if he/she decides to use the API in the concurrency way that the API author did not participate. 
+AsyncIt does not do anything fancy. Like the `await` keyword, it cannot magically convert a synchronous routine into an asynchronous one and vice versa. Instead, it simply emits the code that the developer would type manually if he/she decides to use the API in a concurrency way that the API author did not anticipate. 
 
-AsyncIt can also be used to balance API of teh external assemblies (e.g. .NET base classes, nuget packages)
+AsyncIt can also be used to balance API of the external assemblies (e.g. .NET base classes, nuget packages)
 
 This is where AsyncIt is placed in the overall .NET concurrency model architecture: 
 
@@ -48,13 +48,13 @@ This is where AsyncIt is placed in the overall .NET concurrency model architectu
 
 ## Usage
 
-In order to integrate AsyncIt with your .NET project just add AsyncIt Nuget package. 
+In order to integrate AsyncIt with your .NET project, add AsyncIt Nuget package. 
 
 ```ps
-dotnet add package AsyncIt --version 1.0.0-pre4
+dotnet add package AsyncIt
 ```
 
-That's it. Now you can mark any your type that you want to generate async/sync methods for, with the `[Async]` attribute (see the details below) and the new source code will be generated and included in the build. 
+That's it. Now, you can mark any type for which you want to generate async/sync methods with the `[Async]` attribute (see the details below), and the new source code will be generated and included in the build. 
 
 You can always inspect the generated code in the Visual Studio solution explorer:   
 
