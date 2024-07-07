@@ -26,7 +26,7 @@ class LocalModel
 class ExternalModel
 {
     public AsyncExternalAttribute Attribute;
-    public string TypeName = "";
+    public string TypeName => $"{TypeSymbol}";
     public string FilePath = "";
     public ISymbol TypeSymbol;
 }

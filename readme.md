@@ -1,16 +1,16 @@
 # AsyncIt
 
-AsyncIt is a NuGet package library that allows the automatic generation of synchronous and asynchronous APIs.
+AsyncIt is a NuGet package library that allows automatic generation of additional synchronous and asynchronous APIs for existing user codebase and external packages.
 
-It aims to extend user-defined CLR types by automating otherwise manual definitions of reparative and straightforward routines. Thus the development and the consumption of the released API are simplified due to the balanced (close to ideal) ratio of the synchronous and asynchronous API endpoints:
+It aims to extend user-defined CLR types by automating otherwise manual process of defining repetitive and straightforward routines. Thus the development, maintenance and the consumption of the released API are simplified due to the balanced (close to ideal) ratio of the synchronous and asynchronous API endpoints:
 
 &nbsp;&nbsp;&nbsp;_**Every functionality point has both Async and Sync API endpoints available.**_
 
 This content is an extract of the project's main [Wiki page](https://github.com/oleg-shilo/AsyncIt/wiki). It is highly recommended that you read it as it explains the deep reasons behind this project as well as details of the more concrete usage scenarios.
 
-## Background
+## Overview
 
-AsyncIt is a source generator that is integrated into the .NET build process as a special tool type called "Analyzer". It is invoked by the compiler during the building of the assembly and allows the injection of missing API endpoints based on the present API. Thus if the assembly being built has `GetStatus` but not `GetStatusAsync` then AsyncIt will generate the missing method with a straightforward implementation. Or it can generate the synchronous API if it is not present in the original codebase:
+AsyncIt is a source generator that is integrated into the .NET build process as a special tool type: so-called "Analyzer". It is invoked by the compiler during the build of the assembly and allows injection of missing API endpoints based on the present assembly API. Thus if the assembly being built has `GetStatus` but not `GetStatusAsync` method then AsyncIt will generate the missing method with a straightforward implementation. It can also generate the synchronous API if it is not present in the original codebase:
 
 - The API defines synchronous methods only:
 
@@ -38,7 +38,9 @@ AsyncIt is a source generator that is integrated into the .NET build process as 
   }
   ```
 
-AsyncIt does not do anything fancy. Similar to the `await` keyword it cannot magically convert a synchronous routine into an asynchronous one and vice versa. It simply emits the code that the developer would type manually if he/she decides to use the API the concurrency way that the API author did not participate. 
+AsyncIt does not do anything fancy. Similar to the `await` keyword, it cannot magically convert a synchronous routine into an asynchronous one and vice versa. It simply emits the code that the developer would type manually if he/she decides to use the API in the concurrency way that the API author did not participate. 
+
+AsyncIt can also be used to balance API of teh external assemblies (e.g. .NET base classes, nuget packages)
 
 This is where AsyncIt is placed in the overall .NET concurrency model architecture: 
 
@@ -49,18 +51,19 @@ This is where AsyncIt is placed in the overall .NET concurrency model architectu
 In order to integrate AsyncIt with your .NET project just add AsyncIt Nuget package. 
 
 ```ps
-dotnet add package AsyncIt --version 1.0.0-pre
+dotnet add package AsyncIt --version 1.0.0-pre4
 ```
 
-That's it. Now you can mark any type you want to generate async/sync methods for, with the `[Async]` attribute (see the details below) and the new source code will be generated and included in the build. 
+That's it. Now you can mark any your type that you want to generate async/sync methods for, with the `[Async]` attribute (see the details below) and the new source code will be generated and included in the build. 
 
 You can always inspect the generated code in the Visual Studio solution explorer:   
 
 ![image](https://github.com/oleg-shilo/AsyncIt/assets/16729806/fabed4b6-3eec-4421-a293-ed10fad4a950)
 
+
 ###  Extending user-defined types
 
-In this scenario, a user type containing sync/async methods is extended by additional source file(s) implementing additional/missing API methods.
+In this scenario, a user type containing sync/async methods is extended by additional source file(s) implementing additional API methods.
 The type can be extended either with an additional partial class definition or by the extension methods class.
 
 A typical usage can be illustrated by the code below.
@@ -73,11 +76,13 @@ public partial class BankService
 {
     public partial class OrderService
     {
-        public Order GetOrder(int id)
+        public Order GetOrder(int id) // GetOrderAsync will be created by AsyncIt
         {...}
     }
 }
+
 ...
+
 async Task OnButtonClick(object sender, EventArgs args)
 {
     Order order = await service.GetOrderAsync(this.OrderId);
@@ -91,9 +96,10 @@ _Sync scenario:_
 [Async(Interface = Interface.Sync)]
 partial class AccountService
 {
-    public async Task<Account> GetAccountAsync(int id)
+    public async Task<Account> GetAccountAsync(int id) // GetAccount will be created by AsyncIt
     {...}
 }
+
 ...
 
 static void Main()
@@ -106,21 +112,25 @@ static void Main()
 
 ###  Extending external types
 
-_**NOTE: this is still a pending feature scheduled for future release(s), thus the API may change.**_
+In this scenario, an external type (from a referenced assembly) containing sync/async methods is extended by additional source file(s) implementing additional API methods.
+The type can be extended by the extension methods class.
 
-In this scenario, a user type containing sync/async methods is extended by additional source file(s) implementing additional/missing API methods.
-The type can be extended either with an additional partial class definition or by the extension methods class.
-
-A typical usage can be illustrated by the code below.
+A typical usage can be illustrated by the code below for generating on-fly synchronous methods for type `HttpClient`  .
 
 _Async scenario:_
  
 ```C#
-[AsyncExternal(Assembly = "System.IO", Type="System.IO.Directory")];
+// For all synchronous methods of DirectoryInfo will be created an async equivalent by AsyncIt
+[assembly: AsyncExternal(typeof(DirectoryInfo), Interface.Async)] 
+
 ...
+
 async Task OnButtonClick(object sender, EventArgs args)
 {
-    string[] folders = await Directory.GetDirectoriesAsync(workingDir);
+    var info = new DirectoryInfo(workingDir);
+    
+    string[] folders = await info.GetDirectoriesAsync("*", SearchOption.AllDirectories);
+
     foreach(var path in folders)
       foldersListBox.Add(path);
 }
@@ -129,12 +139,13 @@ async Task OnButtonClick(object sender, EventArgs args)
 _Sync scenario:_
 
 ```c#
-[AsyncExternal(Assembly = "System.Net", Type="System.Net.Http.HttpClient", Interface = Interface.Sync)];
+// For all asynchronous methods of DirectoryInfo will be created a sync equivalent by AsyncIt
+[assembly: AsyncExternal(typeof(HttpClient), Interface.Sync)];
 
 ...
 
 static void Main() 
     => File.WriteAllText(
            "temperature.txt", 
-           new HttpClient().GetString("https://www.weather.com/temperature"));
+           new HttpClient().GetString("https://www.weather.com/au/melbourne/temperature"));
 ```

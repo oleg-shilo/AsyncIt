@@ -52,24 +52,28 @@ namespace AsyncIt
 
                         foreach (AttributeData data in cntx.Attributes)
                         {
-                            // if we try to reconstruct AsyncExternalAttribute.Type then we would need top load its all
-                            // dependencies so using `ISymbol symbol` from the prev call instead
+                            var model = new ExternalModel
+                            {
+                                Attribute = new AsyncExternalAttribute(null),
+                                FilePath = cntx.TargetNode.SyntaxTree.FilePath,
+                            };
 
-                            var attr = new AsyncExternalAttribute(null);
-
-                            string argValue = (data.GetAttributeNamedArgValue("Interface") ??
-                                               data.GetAttributeNamedArgValue(typeof(Interface).FullName))
-                                               ?? attr.Interface.ToString();
-
-                            attr.Interface = argValue.EnumParse<Interface>();
-
-                            argValue = (data.GetAttributeNamedArgValue(nameof(AsyncExternalAttribute.Methods)) ??
-                                        data.GetAttributeNamedArgValue("".GetType().FullName))?.Trim('"')
-                                        ?? attr.Methods;
-
-                            attr.Methods = argValue;
-
-                            Log.WriteLine($"External: {attr.Interface}, {attr.Methods}");
+                            model.TypeSymbol = (ISymbol)
+                                (data.NamedArguments.FirstOrDefault(x => x.Key == nameof(AsyncExternalAttribute.Type)).Value.Value ??
+                                 data.ConstructorArguments.FirstOrDefault().Value);
+                            // ----
+                            var argValue = data.GetAttributeArgValue("Interface") ??
+                                           data.GetAttributeArgValue(typeof(Interface).FullName);
+                            if (argValue.HasText())
+                                model.Attribute.Interface = argValue.EnumParse<Interface>();
+                            // ----
+                            argValue = (data.GetAttributeArgValue(nameof(AsyncExternalAttribute.Methods)) ??
+                                        data.GetAttributeArgValue("".GetType().FullName))
+                                        ?.Trim('"');
+                            if (argValue.HasText())
+                                model.Attribute.Methods = argValue;
+                            // ----
+                            Log.WriteLine($"External: {model.TypeName}, {model.Attribute.Interface}, {model.Attribute.Methods}");
 
                             // To be used later for extracting the XML doc
 
@@ -78,19 +82,14 @@ namespace AsyncIt
                             // var asmsFiles = refs.Select(x => x.FilePath).Cast<string>().ToList();
                             // var asmPath = asmsFiles.FirstOrDefault(x => x.EndsWith(moduleName));
 
-                            models.Add(new ExternalModel
-                            {
-                                Attribute = attr,
-                                TypeName = symbol.ToString(),
-                                FilePath = cntx.TargetNode.SyntaxTree.FilePath,
-                                TypeSymbol = symbol
-                            });
+                            models.Add(model);
                         }
 
                         return models;
                     }
                     catch (Exception ex)
                     {
+                        Debug.Assert(false);
                         Log.WriteLine(ex.ToString());
                         return null;
                     }
@@ -128,7 +127,7 @@ namespace AsyncIt
 
                         alreadyAddedSources.Add(file);
 
-                        Log.WriteLine($"External: ouptut {file}");
+                        // Log.WriteLine($"External: ouptut {file}");
                     }
                 }
                 catch (Exception ex)

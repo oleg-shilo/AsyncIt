@@ -408,7 +408,8 @@ static class Parser
                     ParametersNames = $"({parameters.Select(y => y.Split(' ').Last()).JoinBy(", ")})"
                 };
             })
-            .Where(x => x != null).ToArray();
+            .Where(x => x != null && x.ReturnType.HasText()).ToArray(); //exclude constructors
+
         return typeMetadata;
     }
 

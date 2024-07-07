@@ -209,7 +209,7 @@ static class Extensions
     //     return default(T);
     // }
 
-    internal static string GetAttributeNamedArgValue(this AttributeData attrData, string name = null)
+    internal static string GetAttributeArgValue(this AttributeData attrData, string name = null)
     {
         var attrArguments = attrData.NamedArguments;
         var constrArguments = attrData.ConstructorArguments;

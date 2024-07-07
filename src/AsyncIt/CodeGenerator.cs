@@ -87,7 +87,13 @@ static class CodeGenerator
         var baseType = $"{typeInfo.Name}{typeInfo.GenericParameters}";
         var methodVisibility = GetExtensionMethodVisibility(typeInfo);
         var returnType = methodInfo.ReturnType == "void" ? "Task" : $"Task<{methodInfo.ReturnType}>";
-        var methodParameters = methodInfo.Parameters.Replace("(", $"(this {baseType} instance, ");
+
+        var methodParameters = methodInfo.Parameters;
+        if (methodParameters == "()")
+            methodParameters = $"(this {baseType} instance)";
+        else
+            methodParameters = methodParameters.Replace("(", $"(this {baseType} instance, ");
+
         var methodName = $"{methodInfo.Name.TrimEnd("Sync")}Async";
 
         (var methodGenericParameters, var methodGenericParametersConstraints) = methodInfo.GetMethodGenericParamsInfo(typeInfo);
@@ -106,7 +112,13 @@ static class CodeGenerator
             throw new Exception($"Cannot convert {methodInfo.Name} to synchronous method. Only async methods can be converted.");
 
         var returnType = methodInfo.ReturnType.AsyncToSyncReturnType();
-        var methodParameters = methodInfo.Parameters.Replace("(", $"(this {baseType} instance, ");
+
+        var methodParameters = methodInfo.Parameters;
+        if (methodParameters == "()")
+            methodParameters = $"(this {baseType} instance)";
+        else
+            methodParameters = methodParameters.Replace("(", $"(this {baseType} instance, ");
+
         var methodName = methodInfo.Name.EndsWith("Async") ? methodInfo.Name.TrimEnd("Async") : methodInfo.Name + "Sync";
         var waitCall = (returnType == "void" ? "Wait()" : "Result");
 

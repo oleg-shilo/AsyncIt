@@ -3,9 +3,16 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using AsyncIt;
+using ClientServices;
 
 // generating sync equivalent for all async methods found in a type
 [assembly: AsyncExternal(typeof(HttpClient), Interface.Sync)]
+
+// generating async equivalent for all sync methods found in a type
+[assembly: AsyncExternal(typeof(DirectoryInfo), Interface.Async)]
+
+// generating async/sync equivalent for all methods found in a type
+[assembly: AsyncExternal(typeof(Downloader), Interface.Full)]
 
 // generating sync methods for multiple async methods matching the specified names
 // [assembly: AsyncExternal(Type = typeof(HttpClient), Interface = Interface.Sync, Methods = "GetByteArrayAsync,GetStreamAsync")]
@@ -29,28 +36,24 @@ partial class Program
 {
     static async Task Main(string[] args)
     {
-        var ttt = new List<List<int>>();
+        var fileContent = await new Downloader().DownloadFileAsync(url: "https://www.google.com");
+
+        var info = new DirectoryInfo(@".\");
+        var dirs = await info.GetDirectoriesAsync("*", SearchOption.AllDirectories);
+        foreach (var dir in dirs)
+        {
+            Console.WriteLine(dir);
+        }
 
         HttpClient client = new();
-        client.GetStringAsync("https://www.google.com").Wait();
-        var ttt2 = client.GetString("https://www.google.com");
+        var html = client.GetString("https://www.google.com");
 
-        // OrderService service = new();
-        // var order = await service.GetOrderAsync(1);
-        Console.WriteLine("starting");
+        var service = new OrderService();
+        var order = await service.GetOrderAsync(1);
 
         var svc = new AccountService();
-        // var result = await svc.GetAccountAsync(1);
-        Console.WriteLine("ending");
-
-        // var svc1 = new AccountService1();
-        // await svc1.GetAccountAsync(1);
-        // Console.WriteLine("ending");
-
-        // HelloFrom("Generated sdfsdfsdaCode");
+        var result = await svc.GetAccountAsync(1);
     }
-
-    static partial void HelloFrom(string name);
 }
 
 public class Account
@@ -59,34 +62,10 @@ public class Account
     public string? Name { get; set; }
 }
 
-// [Async(Algorithm.ExtensionMethods, Interface.Sync)]
-partial class NumberService_EM_Sync
-{
-    public async Task<int> GetNumberAsync(int id)
-    {
-        Task.Delay(500).Wait();
-        return id;
-    }
-}
-
-// [Async(Algorithm.ExtensionMethods)]
+[Async(Algorithm.ExtensionMethods)]
 partial class AccountService
 {
     public Account GetAccount(int id)
-    {
-        Task.Delay(3000).Wait();
-        return new Account
-        {
-            Id = id,
-            Name = "User Name",
-        };
-    }
-}
-
-// [Async(Algorithm.ExtensionMethods, Interface.Sync)]
-partial class AccountService2
-{
-    public async Task<Account> GetAccountAsync(int id)
     {
         Task.Delay(3000).Wait();
         return new Account
@@ -109,11 +88,6 @@ class User
 {
     public int Id { get; set; }
     public string? Name { get; set; }
-}
-
-partial class OrderService
-{
-    public Task<Order> GetOrderAsync(int id) => new Task<Order>(() => this.GetOrder(id));
 }
 
 partial struct UserService
@@ -143,7 +117,7 @@ partial struct UserService
     }
 }
 
-// [Async]
+[Async]
 partial class OrderService
 {
     public Order GetOrder(int id)
