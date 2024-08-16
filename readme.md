@@ -139,7 +139,7 @@ async Task OnButtonClick(object sender, EventArgs args)
 _Sync scenario:_
 
 ```c#
-// For all asynchronous methods of DirectoryInfo will be created a sync equivalent by AsyncIt
+// For all asynchronous methods of HttpClient will be created a sync equivalent by AsyncIt
 [assembly: AsyncExternal(typeof(HttpClient), Interface.Sync)];
 
 ...
