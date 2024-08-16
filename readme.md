@@ -76,7 +76,7 @@ public partial class BankService
 {
     public partial class OrderService
     {
-        public Order GetOrder(int id) // GetOrderAsync will be created by AsyncIt
+        public Order GetOrder(int id) // and GetOrderAsync will be created by AsyncIt
         {...}
     }
 }
@@ -96,7 +96,7 @@ _Sync scenario:_
 [Async(Interface = Interface.Sync)]
 partial class AccountService
 {
-    public async Task<Account> GetAccountAsync(int id) // GetAccount will be created by AsyncIt
+    public async Task<Account> GetAccountAsync(int id) // and GetAccount will be created by AsyncIt
     {...}
 }
 
